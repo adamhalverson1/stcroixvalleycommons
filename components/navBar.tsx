@@ -30,7 +30,7 @@ export default function Navbar() {
           <Link href="/events" className="text-white font-bold hover:text-[#7DA195]">Events</Link>
           <SignedOut>
             <Link href="/login" className="text-white font-bold hover:text-[#7DA195]">Business Sign In</Link>
-            <Link href="/signup" className="text-white font-bold hover:text-[#7DA195]">Business Sign Up</Link>
+            <Link href="/register-business" className="text-white font-bold hover:text-[#7DA195]">Business Sign Up</Link>
           </SignedOut>
           <SignedIn>
             <Link href="/dashboard" className="mr-4">Dashboard</Link>
@@ -47,7 +47,7 @@ export default function Navbar() {
             <Link href="/events" className="text-white font-bold hover:text-[#7DA195]">Events</Link>
             <SignedOut>
                 <Link href="/login" className="mr-4">Business Sign In</Link>
-                <Link href="/signup">Business Sign Up</Link>
+                <Link href="/register-business">Business Sign Up</Link>
             </SignedOut>
             <SignedIn>
                 <Link href="/dashboard" className="mr-4">Dashboard</Link>
