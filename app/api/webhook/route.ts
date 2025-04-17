@@ -1,52 +1,86 @@
-// pages/api/webhook.ts
-import { buffer } from 'micro';
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-
-export const config = {
-  api: {
-    bodyParser: false, // ⚠️ Important: disable body parsing
-  },
-};
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-03-31.basil',
 });
 
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+// Only initialize Firebase once
+if (!getApps().length) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+  });
+}
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).end('Method Not Allowed');
-  }
+const db = getFirestore();
 
-  const buf = await buffer(req);
-  const sig = req.headers['stripe-signature'];
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+export async function POST(req: NextRequest) {
+  const rawBody = await req.text();
+  const sig = req.headers.get('stripe-signature')!;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(buf, sig as string, endpointSecret);
-  } catch (err: any) {
-    console.error('Webhook signature verification failed.', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+  } catch (err) {
+    console.error('❌ Webhook signature verification failed.', err);
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
-  // Handle the event
-  try {
-    switch (event.type) {
-      case 'checkout.session.completed':
-        const session = event.data.object;
-        console.log('✅ Checkout session completed:', session);
-        break;
-      // Add more event types as needed
-      default:
-        console.log(`Unhandled event type ${event.type}`);
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const businessId = session.metadata?.businessId;
+    const priceId = session.metadata?.priceId;
+    const planType = session.metadata?.planType ?? 'basic';
+
+    console.log('✅ Session completed for business ID:', businessId);
+
+    if (!businessId) {
+      console.error('❌ No businessId found in metadata.');
+      return NextResponse.json({ error: 'Missing businessId' }, { status: 400 });
     }
 
-    res.status(200).send('Received');
-  } catch (err: any) {
-    console.error('❌ Error handling event:', err.message);
-    res.status(500).send('Internal Server Error');
+    try {
+      // Get subscription object from Stripe
+      const subscriptionId = session.subscription as string;
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+      const currentPeriodEndTimestamp = subscription.current_period_end
+        ? Timestamp.fromDate(new Date(subscription.current_period_end * 1000))
+        : null;
+
+      await db.collection('businesses').doc(businessId).set(
+        {
+          subscriptionStatus: 'active',
+          subscribedAt: Timestamp.now(),
+          subscriptionId,
+          customerId: session.customer as string,
+          priceId,
+          planType,
+          ...(currentPeriodEndTimestamp && { currentPeriodEnd: currentPeriodEndTimestamp }),
+        },
+        { merge: true }
+      );
+
+      console.log(`✅ Firestore updated for business ${businessId}`);
+    } catch (err) {
+      console.error('🔥 Firestore update failed:', err);
+      return NextResponse.json({ error: 'Firestore update failed' }, { status: 500 });
+    }
   }
+
+  return NextResponse.json({ received: true });
 }
