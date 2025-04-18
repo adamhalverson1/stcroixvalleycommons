@@ -23,18 +23,10 @@ export default function RegisterBusinessPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    try {
-      const docRef = await addDoc(collection(db, 'businesses'), {
-        ...form,
-        createdAt: serverTimestamp(),
-        plan: null,
-      });
-      localStorage.setItem('businessId', docRef.id);
-      router.push('/select-plan');
-    } catch (error) {
-      console.error('Error submitting form:', error);
-    }
+  
+    // Save form to localStorage instead of Firestore
+    localStorage.setItem('businessForm', JSON.stringify(form));
+    router.push('/sign-up');
   };
 
   return (
@@ -46,7 +38,27 @@ export default function RegisterBusinessPage() {
       <input name="city" onChange={handleChange} placeholder="City" />
       <input name="state" onChange={handleChange} placeholder="State" />
       <input name="website" onChange={handleChange} placeholder="Website" />
-      <input name="category" onChange={handleChange} placeholder="Category" />
+      <select
+        name="category"
+        value={form.category}
+        onChange={handleChange}
+        required
+        className="w-full border px-3 py-2 rounded"
+      >
+        <option value="">Select Category</option>
+        <option value="Retail & Consumer Goods">Retail & Consumer Goods</option>
+        <option value="Food & Beverage">Food & Beverage</option>
+        <option value="Professional Services">Professional Services</option>
+        <option value="Health & Wellness">Health & Wellness</option>
+        <option value="Education & Training">Education & Training</option>
+        <option value="Technology & IT">Technology & IT</option>
+        <option value="Finance & Insurance">Finance & Insurance</option>
+        <option value="Automotive">Automotive</option>
+        <option value="Home Services">Home Services</option>
+        <option value="Arts, Entertainment & Recreation">Arts, Entertainment & Recreation</option>
+        <option value="Logistics & Transportation">Logistics & Transportation</option>
+        <option value="Pets & Animals">Pets & Animals</option>
+      </select>
       <button type="submit">Continue to Plan</button>
     </form>
   );
