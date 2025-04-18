@@ -1,7 +1,5 @@
-import React from 'react'
+import { SignIn } from '@clerk/nextjs'
 
-export default function page() {
-  return (
-    <div>This is the business log in page. </div>
-  )
+export default function Page() {
+  return <SignIn />
 }
