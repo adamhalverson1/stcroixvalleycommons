@@ -17,6 +17,8 @@ export default function DashboardPage() {
   const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [updatingPlan, setUpdatingPlan] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [formState, setFormState] = useState({
     name: '',
     email: '',
@@ -85,23 +87,68 @@ export default function DashboardPage() {
     }
   };
 
-  const handleStripePortal = async () => {
+  const handleChangePlan = async () => {
+    if (!business?.id || !business?.subscriptionId) return;
+    setUpdatingPlan(true);
     try {
-      const res = await fetch('/api/update-stripe-subscription', {
+      const res = await fetch('/api/change-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           businessId: business.id,
-          newPlan: formState.planType,
+          subscriptionId: business.subscriptionId,
+          newPlanPriceId: formState.planType === 'Featured'
+            ? process.env.NEXT_PUBLIC_STRIPE_FEATURED_PRICE_ID
+            : process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID,
         }),
       });
 
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
+      if (data.success) {
+        const businessRef = doc(db, 'businesses', business.id);
+        await updateDoc(businessRef, {
+          planType: formState.planType,
+        });
+        setBusiness(prev => ({ ...prev, planType: formState.planType }));
+        alert('Plan updated successfully!');
+      } else {
+        alert('Failed to update plan.');
       }
     } catch (error) {
-      console.error('Error redirecting to Stripe:', error);
+      console.error('Error changing plan:', error);
+    } finally {
+      setUpdatingPlan(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!business?.id || !business?.subscriptionId) return;
+    setCancelling(true);
+    try {
+      const res = await fetch('/api/cancel-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId: business.id,
+          subscriptionId: business.subscriptionId,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        const businessRef = doc(db, 'businesses', business.id);
+        await updateDoc(businessRef, {
+          subscriptionStatus: 'canceled',
+        });
+        setBusiness(prev => ({ ...prev, subscriptionStatus: 'canceled' }));
+        alert('Subscription canceled successfully!');
+      } else {
+        alert('Failed to cancel subscription.');
+      }
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -109,10 +156,10 @@ export default function DashboardPage() {
   if (!business) return <p>No business found for your account.</p>;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
+    <div className="max-w-2xl mx-auto space-y-6">
       <h1 className="text-2xl font-semibold">Business Dashboard</h1>
 
-      <div className="p-4 border rounded space-y-2">
+      <div className="p-4 border rounded space-y-4">
         <h2 className="text-xl font-medium">Business Info</h2>
         {['name', 'phone', 'email', 'address', 'city', 'state', 'website'].map((field) => (
           <div key={field}>
@@ -161,7 +208,7 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      <div className="p-4 border rounded">
+      <div className="p-4 border rounded space-y-4">
         <h2 className="text-xl font-medium">Subscription</h2>
         <div>
           <label className="block font-medium">Plan</label>
@@ -175,13 +222,25 @@ export default function DashboardPage() {
             <option value="Featured">Featured</option>
           </select>
         </div>
+
         <p><strong>Status:</strong> {business.subscriptionStatus || 'Not subscribed'}</p>
-        <button
-          onClick={handleStripePortal}
-          className="bg-blue-600 text-white px-4 py-2 rounded mt-2"
-        >
-          Manage Billing
-        </button>
+
+        <div className="flex gap-2">
+          <button
+            onClick={handleChangePlan}
+            disabled={updatingPlan}
+            className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            {updatingPlan ? 'Updating...' : 'Update Plan'}
+          </button>
+          <button
+            onClick={handleCancelSubscription}
+            disabled={cancelling}
+            className="bg-red-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
+          </button>
+        </div>
       </div>
     </div>
   );
