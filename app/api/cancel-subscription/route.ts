@@ -1,7 +1,6 @@
-import { auth } from '@clerk/nextjs';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -9,41 +8,26 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export async function POST(req: Request) {
-  const { userId } = auth();
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
   try {
-    // Fetch business by userId
-    const businessesRef = collection(db, 'businesses');
-    const q = query(businessesRef, where('userId', '==', userId));
-    const snapshot = await getDocs(q);
+    const { businessId, subscriptionId } = await req.json();
 
-    if (snapshot.empty) {
-      return NextResponse.json({ error: 'Business not found' }, { status: 404 });
+    if (!businessId || !subscriptionId) {
+      return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
     }
 
-    const businessDoc = snapshot.docs[0];
-    const businessData = businessDoc.data();
-    const stripeSubscriptionId = businessData.stripeSubscriptionId;
-
-    if (!stripeSubscriptionId) {
-      return NextResponse.json({ error: 'No Stripe subscription found' }, { status: 400 });
-    }
-
-    // Cancel subscription
-    await stripe.subscriptions.del(stripeSubscriptionId);
+    // Cancel subscription immediately
+    await stripe.subscriptions.cancel(subscriptionId);
 
     // Update Firestore
-    const businessRef = doc(db, 'businesses', businessDoc.id);
+    const businessRef = doc(db, 'businesses', businessId);
     await updateDoc(businessRef, {
-      planType: '',
-      stripeSubscriptionId: '', // Clear out the subscription ID too
-      stripeSubscriptionItemId: '',
+      subscriptionStatus: 'inactive',
+      planType: 'none', // or you can omit this line if you prefer
     });
 
-    return NextResponse.json({ message: 'Subscription canceled successfully.' });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
+    console.error('[CANCEL_SUBSCRIPTION_ERROR]', error);
+    return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
   }
 }

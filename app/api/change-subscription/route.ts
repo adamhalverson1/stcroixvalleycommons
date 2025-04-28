@@ -1,5 +1,3 @@
-// /api/change-subscription/route.ts
-
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -9,6 +7,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-03-31.basil',
 });
 
+// Map Stripe Price IDs to Plan Names manually
+const priceIdToPlanName: Record<string, string> = {
+  [process.env.STRIPE_BASIC_PRICE_ID!]: 'Basic',
+  [process.env.STRIPE_FEATURED_PRICE_ID!]: 'Featured',
+};
+
 export async function POST(req: Request) {
   try {
     const { businessId, subscriptionId, newPlanPriceId } = await req.json();
@@ -17,19 +21,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
     }
 
-    // Update subscription in Stripe
+    // Fetch current subscription to get item ID
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const itemId = subscription.items.data[0].id;
+
+    // Update subscription price
     const updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
       items: [{
-        id: (await stripe.subscriptions.retrieve(subscriptionId)).items.data[0].id,
+        id: itemId,
         price: newPlanPriceId,
       }],
       proration_behavior: 'create_prorations',
     });
 
-    // Update business document in Firestore
+    const selectedPlanName = priceIdToPlanName[newPlanPriceId] || 'Unknown';
+
+    // Update Firestore
     const businessRef = doc(db, 'businesses', businessId);
     await updateDoc(businessRef, {
-      planType: updatedSubscription.items.data[0].price.nickname,
+      planType: selectedPlanName,
       subscriptionStatus: updatedSubscription.status,
     });
 
