@@ -1,29 +1,37 @@
 'use client';
-import { useEffect } from 'react';
+
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, SignUp } from '@clerk/nextjs';
 import { db } from '@/lib/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import SignUpForm from '@/components/SignUpForm'; // You need to create this
 
 export default function SignUpPage() {
   const router = useRouter();
-  const { isSignedIn, user } = useUser();
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const saveBusiness = async () => {
-      if (isSignedIn && user) {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser && !user) {
+        setUser(firebaseUser);
         const formData = localStorage.getItem('businessForm');
-        if (!formData) return;
-
-        const business = JSON.parse(formData);
+  
+        if (!formData) {
+          console.warn('No businessForm data found');
+          return;
+        }
+  
         try {
+          const business = JSON.parse(formData);
           const docRef = await addDoc(collection(db, 'businesses'), {
             ...business,
             createdAt: serverTimestamp(),
-            userId: user.id,
+            userId: firebaseUser.uid,
             plan: null,
           });
-
+  
           localStorage.removeItem('businessForm');
           localStorage.setItem('businessId', docRef.id);
           router.push('/select-plan');
@@ -31,14 +39,14 @@ export default function SignUpPage() {
           console.error('Error saving business after sign-up:', err);
         }
       }
-    };
-
-    saveBusiness();
-  }, [isSignedIn, user, router]);
+    });
+  
+    return () => unsubscribe();
+  }, [router, user]);
 
   return (
     <div className="flex justify-center py-10">
-      <SignUp afterSignUpUrl="/sign-up" />
+      <SignUpForm />
     </div>
   );
 }

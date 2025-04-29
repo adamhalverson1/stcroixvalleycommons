@@ -16,6 +16,7 @@ export default function RegisterBusinessPage() {
     state: '',
     website: '',
     category: '',
+    description: '',
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
@@ -39,18 +40,29 @@ export default function RegisterBusinessPage() {
     e.preventDefault();
 
     localStorage.setItem('pendingBusiness', JSON.stringify(form));
-    router.push('/complete-business');
+    router.push('/sign-up');
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
-      <input name="name" onChange={handleChange} required placeholder="Business Name" />
-      <input name="email" onChange={handleChange} required placeholder="Email" />
-      <input name="phone" onChange={handleChange} placeholder="Phone" />
-      <input name="address" onChange={handleChange} placeholder="Address" />
-      <input name="city" onChange={handleChange} placeholder="City" />
-      <input name="state" onChange={handleChange} placeholder="State" />
-      <input name="website" onChange={handleChange} placeholder="Website" />
+      <input className="w-full border" name="name" onChange={handleChange} required placeholder="Business Name" />
+      <input className="w-full border" name="email" onChange={handleChange} required placeholder="Email" />
+      <input className="w-full border" name="phone" onChange={handleChange} placeholder="Phone" />
+      <input className="w-full border" name="address" onChange={handleChange} placeholder="Address" />
+      <input className="w-full border" name="city" onChange={handleChange} placeholder="City" />
+      <select
+        name="state"
+        value={form.state}
+        onChange={handleChange}
+        required
+        className="w-full border px-3 py-2 rounded"
+      >
+        <option value="">Select a State</option>
+        <option value="Retail & Consumer Goods">Minnesota</option>
+        <option value="Food & Beverage">Wisconsin</option>
+      </select>
+      <input className="w-full border" name="website" onChange={handleChange} placeholder="Website" />
+      
       <select
         name="category"
         value={form.category}
@@ -72,7 +84,7 @@ export default function RegisterBusinessPage() {
         <option value="Logistics & Transportation">Logistics & Transportation</option>
         <option value="Pets & Animals">Pets & Animals</option>
       </select>
-
+      <input className="w-full border h-25 " name="description" onChange={handleChange} placeholder="Business Description"  />
       <input type="file" accept="image/*" onChange={handleImageChange} />
 
       <button type="submit">Continue to Plan</button>

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useUser } from '@clerk/nextjs';
 import { db } from '@/lib/firebase';
 import {
   collection,
@@ -12,10 +11,10 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 export default function DashboardPage() {
-  const { user } = useUser();
+  const [userId, setUserId] = useState<string | null>(null);
   const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -36,14 +35,26 @@ export default function DashboardPage() {
   const [imageUrl, setImageUrl] = useState<string>('');
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUserId(user.uid);
+      } else {
+        setUserId(null);
+        setLoading(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const fetchBusiness = async () => {
-      if (!user?.id) return;
+      if (!userId) return;
 
       try {
         const businessesRef = collection(db, 'businesses');
-        const q = query(businessesRef, where('userId', '==', user.id));
+        const q = query(businessesRef, where('userId', '==', userId));
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
@@ -73,7 +84,7 @@ export default function DashboardPage() {
     };
 
     fetchBusiness();
-  }, [user]);
+  }, [userId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
