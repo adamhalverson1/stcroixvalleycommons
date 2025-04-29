@@ -133,14 +133,20 @@ export default function DashboardPage() {
           subscriptionId: business.subscriptionId,
         }),
       });
-
+  
       const data = await res.json();
       if (data.success) {
         const businessRef = doc(db, 'businesses', business.id);
+        const canceledAt = new Date().toISOString();
         await updateDoc(businessRef, {
           subscriptionStatus: 'canceled',
+          canceled_at: canceledAt,
         });
-        setBusiness(prev => ({ ...prev, subscriptionStatus: 'canceled' }));
+        setBusiness(prev => ({
+          ...prev,
+          subscriptionStatus: 'canceled',
+          canceled_at: canceledAt,
+        }));
         alert('Subscription canceled successfully!');
       } else {
         alert('Failed to cancel subscription.');
@@ -151,6 +157,50 @@ export default function DashboardPage() {
       setCancelling(false);
     }
   };
+
+  const handleResubscribe = async () => {
+    if (!business?.id) return;
+    setUpdatingPlan(true);
+    try {
+      const res = await fetch('/api/resubscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId: business.id,
+          priceId:
+            formState.planType === 'Featured'
+              ? process.env.NEXT_PUBLIC_STRIPE_FEATURED_PRICE_ID
+              : process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID,
+        }),
+      });
+  
+      const data = await res.json();
+      if (data.success) {
+        const businessRef = doc(db, 'businesses', business.id);
+        await updateDoc(businessRef, {
+          subscriptionId: data.subscriptionId,
+          subscriptionStatus: data.subscriptionStatus,
+          canceled_at: null,
+          planType: formState.planType,
+        });
+        setBusiness(prev => ({
+          ...prev,
+          subscriptionId: data.subscriptionId,
+          subscriptionStatus: data.subscriptionStatus,
+          canceled_at: null,
+          planType: formState.planType,
+        }));
+        alert('Resubscribed successfully!');
+      } else {
+        alert('Failed to resubscribe.');
+      }
+    } catch (error) {
+      console.error('Error resubscribing:', error);
+    } finally {
+      setUpdatingPlan(false);
+    }
+  };
+
 
   if (loading) return <p>Loading...</p>;
   if (!business) return <p>No business found for your account.</p>;
@@ -211,7 +261,8 @@ export default function DashboardPage() {
       <div className="p-4 border rounded space-y-4">
         <h2 className="text-xl font-medium">Subscription</h2>
         <div>
-          <label className="block font-medium">Plan</label>
+          <label className="block font-medium pb-5"><strong>Plan</strong></label>
+          <p className='pb-5'>You are currently subscribed to <strong>{business.planType}</strong> you can change this at any time by selecting a different plan from the drop-down menu below. </p>
           <select
             name="planType"
             value={formState.planType}
@@ -224,8 +275,12 @@ export default function DashboardPage() {
         </div>
 
         <p><strong>Status:</strong> {business.subscriptionStatus || 'Not subscribed'}</p>
+        {business.canceled_at && (
+        <p><strong>Canceled At:</strong> {new Date(business.canceled_at).toLocaleString()}</p>
+        )}
 
-        <div className="flex gap-2">
+      {business.subscriptionStatus === 'active' && (
+        <div className='flex justify-center space-x-4'>
           <button
             onClick={handleChangePlan}
             disabled={updatingPlan}
@@ -241,7 +296,8 @@ export default function DashboardPage() {
             {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
           </button>
         </div>
+      )}
       </div>
-    </div>
+      </div>
   );
 }

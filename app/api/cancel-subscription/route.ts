@@ -1,3 +1,5 @@
+// app/api/cancel-subscription/route.ts
+
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -15,17 +17,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
     }
 
-    // Cancel subscription immediately
-    await stripe.subscriptions.cancel(subscriptionId);
+    // Cancel at end of billing period
+    const canceledSubscription = await stripe.subscriptions.update(subscriptionId, {
+      cancel_at_period_end: true,
+    });
 
     // Update Firestore
     const businessRef = doc(db, 'businesses', businessId);
     await updateDoc(businessRef, {
-      subscriptionStatus: 'inactive',
-      planType: 'none', // or you can omit this line if you prefer
+      subscriptionStatus: 'cancelling', // still active until period ends
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, canceledAt: canceledSubscription.cancel_at });
   } catch (error) {
     console.error('[CANCEL_SUBSCRIPTION_ERROR]', error);
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
