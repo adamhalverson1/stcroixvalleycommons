@@ -1,7 +1,8 @@
+// app/register-business/page.tsx
+
 'use client';
+
 import { useState } from 'react';
-import { db } from '@/lib/firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
 export default function RegisterBusinessPage() {
@@ -16,17 +17,29 @@ export default function RegisterBusinessPage() {
     website: '',
     category: '',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        localStorage.setItem('pendingBusinessImage', reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
-    // Save form to localStorage instead of Firestore
-    localStorage.setItem('businessForm', JSON.stringify(form));
-    router.push('/sign-up');
+
+    localStorage.setItem('pendingBusiness', JSON.stringify(form));
+    router.push('/complete-business');
   };
 
   return (
@@ -59,6 +72,9 @@ export default function RegisterBusinessPage() {
         <option value="Logistics & Transportation">Logistics & Transportation</option>
         <option value="Pets & Animals">Pets & Animals</option>
       </select>
+
+      <input type="file" accept="image/*" onChange={handleImageChange} />
+
       <button type="submit">Continue to Plan</button>
     </form>
   );

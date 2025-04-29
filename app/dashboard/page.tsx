@@ -11,6 +11,8 @@ import {
   doc,
   updateDoc,
 } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -30,6 +32,10 @@ export default function DashboardPage() {
     website: '',
     category: '',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string>('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+
 
   useEffect(() => {
     const fetchBusiness = async () => {
@@ -46,6 +52,7 @@ export default function DashboardPage() {
             ...querySnapshot.docs[0].data(),
           };
           setBusiness(data);
+          setImageUrl(data.imageUrl || '');
           setFormState({
             name: data.name || '',
             email: data.email || '',
@@ -157,50 +164,32 @@ export default function DashboardPage() {
       setCancelling(false);
     }
   };
-
-  const handleResubscribe = async () => {
-    if (!business?.id) return;
-    setUpdatingPlan(true);
-    try {
-      const res = await fetch('/api/resubscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          businessId: business.id,
-          priceId:
-            formState.planType === 'Featured'
-              ? process.env.NEXT_PUBLIC_STRIPE_FEATURED_PRICE_ID
-              : process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID,
-        }),
-      });
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0] || !business?.id) return;
   
-      const data = await res.json();
-      if (data.success) {
-        const businessRef = doc(db, 'businesses', business.id);
-        await updateDoc(businessRef, {
-          subscriptionId: data.subscriptionId,
-          subscriptionStatus: data.subscriptionStatus,
-          canceled_at: null,
-          planType: formState.planType,
-        });
-        setBusiness(prev => ({
-          ...prev,
-          subscriptionId: data.subscriptionId,
-          subscriptionStatus: data.subscriptionStatus,
-          canceled_at: null,
-          planType: formState.planType,
-        }));
-        alert('Resubscribed successfully!');
-      } else {
-        alert('Failed to resubscribe.');
-      }
+    const file = e.target.files[0];
+    setImageFile(file);
+    setUploadingImage(true);
+  
+    try {
+      const storage = getStorage();
+      const storageRef = ref(storage, `businessImages/${business.id}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+  
+      // Save to Firestore
+      const businessRef = doc(db, 'businesses', business.id);
+      await updateDoc(businessRef, { imageUrl: url });
+  
+      setImageUrl(url);
+      alert('Image uploaded successfully!');
     } catch (error) {
-      console.error('Error resubscribing:', error);
+      console.error('Error uploading image:', error);
+      alert('Image upload failed');
     } finally {
-      setUpdatingPlan(false);
+      setUploadingImage(false);
     }
   };
-
 
   if (loading) return <p>Loading...</p>;
   if (!business) return <p>No business found for your account.</p>;
@@ -211,6 +200,23 @@ export default function DashboardPage() {
 
       <div className="p-4 border rounded space-y-4">
         <h2 className="text-xl font-medium">Business Info</h2>
+        <div>
+          <label className="block font-medium">Business Image</label>
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt={business.name}
+              className="w-48 h-48 object-cover mb-2 rounded border"
+            />
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="block border rounded border-white px-2"
+          />
+          {uploadingImage && <p className="text-sm text-gray-500">Uploading...</p>}
+          </div>
         {['name', 'phone', 'email', 'address', 'city', 'state', 'website'].map((field) => (
           <div key={field}>
             <label className="block font-medium capitalize">{field}</label>
@@ -221,7 +227,10 @@ export default function DashboardPage() {
               onChange={handleChange}
               className="w-full border p-2 rounded"
             />
+          
           </div>
+
+        
         ))}
 
         <div>
