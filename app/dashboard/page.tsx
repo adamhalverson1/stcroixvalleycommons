@@ -23,7 +23,7 @@ export default function DashboardPage() {
   const [formState, setFormState] = useState({
     name: '',
     email: '',
-    planType: '',
+    plan: '',
     phone: '',
     address: '',
     city: '',
@@ -67,7 +67,7 @@ export default function DashboardPage() {
           setFormState({
             name: data.name || '',
             email: data.email || '',
-            planType: data.planType || '',
+            plan: data.plan || '',
             phone: data.phone || '',
             address: data.address || '',
             city: data.city || '',
@@ -115,7 +115,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           businessId: business.id,
           subscriptionId: business.subscriptionId,
-          newPlanPriceId: formState.planType === 'Featured'
+          newPlanPriceId: formState.plan === 'Featured'
             ? process.env.NEXT_PUBLIC_STRIPE_FEATURED_PRICE_ID
             : process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID,
         }),
@@ -125,9 +125,9 @@ export default function DashboardPage() {
       if (data.success) {
         const businessRef = doc(db, 'businesses', business.id);
         await updateDoc(businessRef, {
-          planType: formState.planType,
+          plan: formState.plan,
         });
-        setBusiness(prev => ({ ...prev, planType: formState.planType }));
+        setBusiness(prev => ({ ...prev, plan: formState.plan }));
         alert('Plan updated successfully!');
       } else {
         alert('Failed to update plan.');
@@ -282,10 +282,10 @@ export default function DashboardPage() {
         <h2 className="text-xl font-medium">Subscription</h2>
         <div>
           <label className="block font-medium pb-5"><strong>Plan</strong></label>
-          <p className='pb-5'>You are currently subscribed to <strong>{business.planType}</strong> you can change this at any time by selecting a different plan from the drop-down menu below. </p>
+          <p className='pb-5'>You are currently subscribed to <strong>{business.plan}</strong> you can change this at any time by selecting a different plan from the drop-down menu below. </p>
           <select
-            name="planType"
-            value={formState.planType}
+            name="plan"
+            value={formState.plan}
             onChange={handleChange}
             className="w-full border px-3 py-2 rounded"
           >

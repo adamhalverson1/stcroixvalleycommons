@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     const session = event.data.object as Stripe.Checkout.Session;
     const businessId = session.metadata?.businessId;
     const priceId = session.metadata?.priceId;
-    const planType = session.metadata?.planType ?? 'basic';
+    const plan = session.metadata?.plan ?? 'basic';
 
     console.log('✅ Session completed for business ID:', businessId);
 
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
           subscriptionId,
           customerId: session.customer as string,
           priceId,
-          planType,
+          plan,
           ...(currentPeriodEndTimestamp && { currentPeriodEnd: currentPeriodEndTimestamp }),
         },
         { merge: true }

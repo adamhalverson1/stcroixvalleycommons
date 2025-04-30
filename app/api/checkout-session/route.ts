@@ -6,7 +6,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export async function POST(req: NextRequest) {
-  const { businessId, priceId, planType } = await req.json(); // 👈 Add planType
+  const { businessId, priceId, plan } = await req.json();
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         businessId,
         priceId,
-        planType, // 👈 Include planType in metadata
+        plan,
       },
     });
 
