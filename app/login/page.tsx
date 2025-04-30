@@ -24,12 +24,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+    <div className="bg-gray-100 min-h-screen px-6 py-8 flex items-center justify-center">
       <form
         onSubmit={handleLogin}
         className="bg-white p-6 rounded shadow-md w-full max-w-md"
       >
-        <h1 className="text-2xl font-bold mb-4 text-center">Business Sign In</h1>
+        <h1 className="text-3xl font-bold text-center text-[#4C7C59] mb-6">Business Sign In</h1>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <input
           type="email"

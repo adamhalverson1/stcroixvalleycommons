@@ -43,30 +43,30 @@ export default function RegisterBusinessPage() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
-      <input className="w-full border" name="name" onChange={handleChange} required placeholder="Business Name" />
-      <input className="w-full border" name="email" onChange={handleChange} required placeholder="Email" />
-      <input className="w-full border" name="phone" onChange={handleChange} placeholder="Phone" />
-      <input className="w-full border" name="address" onChange={handleChange} placeholder="Address" />
-      <input className="w-full border" name="city" onChange={handleChange} placeholder="City" />
+      <input className="w-full border font-bold text-center text-[#2C3E50] mb-6" name="name" onChange={handleChange} required placeholder="Business Name" />
+      <input className="w-full border font-bold text-center text-[#2C3E50] mb-6" name="email" onChange={handleChange} required placeholder="Email" />
+      <input className="w-full border font-bold text-center text-[#2C3E50] mb-6" name="phone" onChange={handleChange} placeholder="Phone" />
+      <input className="w-full border font-bold text-center text-[#2C3E50] mb-6" name="address" onChange={handleChange} placeholder="Address" />s
+      <input className="w-full border font-bold text-center text-[#2C3E50] mb-6" name="city" onChange={handleChange} placeholder="City" />
       <select
         name="state"
         value={form.state}
         onChange={handleChange}
         required
-        className="w-full border px-3 py-2 rounded"
+        className="w-full border px-3 py-2 rounded font-bold text-center text-[#2C3E50] mb-6"
       >
         <option value="">Select a State</option>
-        <option value="Retail & Consumer Goods">Minnesota</option>
-        <option value="Food & Beverage">Wisconsin</option>
+        <option value="Minnesota">Minnesota</option>
+        <option value="Wisconsin">Wisconsin</option>
       </select>
-      <input className="w-full border" name="website" onChange={handleChange} placeholder="Website" />
+      <input className="w-full border font-bold text-center text-[#2C3E50] mb-6" name="website" onChange={handleChange} placeholder="Website" />
       
       <select
         name="category"
         value={form.category}
         onChange={handleChange}
         required
-        className="w-full border px-3 py-2 rounded"
+        className="w-full border px-3 py-2 rounded font-bold text-center text-[#2C3E50] mb-6"
       >
         <option value="">Select Category</option>
         <option value="Retail & Consumer Goods">Retail & Consumer Goods</option>
@@ -82,10 +82,11 @@ export default function RegisterBusinessPage() {
         <option value="Logistics & Transportation">Logistics & Transportation</option>
         <option value="Pets & Animals">Pets & Animals</option>
       </select>
-      <input className="w-full border h-25 " name="description" onChange={handleChange} placeholder="Business Description"  />
-      <input type="file" accept="image/*" onChange={handleImageChange} />
+      <input className="w-full border h-25 font-bold text-center text-[#2C3E50] mb-6" name="description" onChange={handleChange} placeholder="Business Description"  />
+      
+      <input className="w-full bg-[#2C3E50] text-white py-2 rounded" type="file" accept="image/*" onChange={handleImageChange} />
 
-      <button type="submit">Continue to Plan</button>
+      <button className="w-full bg-[#2C3E50] text-white py-2 rounded hover:bg-[#1a2734]" type="submit">Continue to Plan</button>
     </form>
   );
 }
