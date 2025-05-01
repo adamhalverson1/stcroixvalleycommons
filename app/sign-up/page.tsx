@@ -61,7 +61,7 @@ export default function SignUpPage() {
   }, [router]);
 
   return (
-    <div className="flex justify-center py-10">
+    <div className="flex justify-center py-10 min-h-screen bg-gray-100 p-6">
       <SignUpForm />
     </div>
   );
