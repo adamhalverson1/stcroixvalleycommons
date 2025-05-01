@@ -60,10 +60,11 @@ export default function RegisterBusinessPage() {
     router.push('/sign-up');
   };
 
+  const [daysOpen, setDaysOpen] = useState<string[]>([]);
+  
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-6">
-      <h2 className="text-2xl font-semibold text-center text-[#2C3E50]">Register Your Business</h2>
-
+      
       <input className="w-full border rounded px-4 py-2 text-[#2C3E50]" name="name" onChange={handleChange} required placeholder="Business Name" />
       <input className="w-full border rounded px-4 py-2 text-[#2C3E50]" name="email" onChange={handleChange} required placeholder="Email" />
       <input className="w-full border rounded px-4 py-2 text-[#2C3E50]" name="phone" onChange={handleChange} placeholder="Phone" />
@@ -114,29 +115,54 @@ export default function RegisterBusinessPage() {
         rows={4}
       />
 
-      <div className="border rounded-lg p-4 bg-gray-50">
-        <h3 className="text-lg font-semibold text-[#2C3E50] mb-4 text-center">Business Hours</h3>
-        <div className="space-y-2">
-          {daysOfWeek.map((day) => (
-            <div key={day} className="flex items-center justify-between gap-4">
-              <span className="w-1/4 font-medium text-[#2C3E50]">{day}</span>
-              <input
-                type="time"
-                value={form.hours[day].open}
-                onChange={(e) => handleHoursChange(day, 'open', e.target.value)}
-                className="w-full border rounded px-2 py-1 text-[#2C3E50]"
-              />
-              <span className="text-sm text-[#2C3E50]">to</span>
-              <input
-                type="time"
-                value={form.hours[day].close}
-                onChange={(e) => handleHoursChange(day, 'close', e.target.value)}
-                className="w-full border rounded px-2 py-1 text-[#2C3E50]"
-              />
-            </div>
-          ))}
-        </div>
+<div className="border rounded-lg p-4 bg-gray-50">
+  <h3 className="text-lg font-semibold text-[#2C3E50] mb-4 text-center">Business Hours</h3>
+
+  <div className="space-y-2 mb-4">
+    <p className="text-sm text-[#2C3E50] font-medium">Select the days your business is open:</p>
+    <div className="grid grid-cols-2 gap-2">
+      {daysOfWeek.map((day) => (
+        <label key={day} className="flex items-center space-x-2 text-[#2C3E50]">
+          <input
+            type="checkbox"
+            checked={daysOpen.includes(day)}
+            onChange={() => {
+              setDaysOpen((prev) =>
+                prev.includes(day)
+                  ? prev.filter((d) => d !== day)
+                  : [...prev, day]
+              );
+            }}
+          />
+          <span>{day}</span>
+        </label>
+      ))}
+    </div>
+  </div>
+
+  <div className="space-y-2">
+    {daysOpen.map((day) => (
+      <div key={day} className="flex items-center justify-between gap-4">
+        <span className="w-1/4 font-medium text-[#2C3E50]">{day}</span>
+        <input
+          type="time"
+          value={form.hours[day].open}
+          onChange={(e) => handleHoursChange(day, 'open', e.target.value)}
+          className="w-full border rounded px-2 py-1 text-[#2C3E50]"
+          required
+        />
+        <span className="text-sm text-[#2C3E50]">to</span>
+        <input
+          type="time"
+          value={form.hours[day].close}
+          onChange={(e) => handleHoursChange(day, 'close', e.target.value)}
+          className="w-full border rounded px-2 py-1 text-[#2C3E50]"
+          required
+        />
       </div>
+    ))}
+  </div>
+</div>
 
       <div>
         <label className="block mb-1 font-medium text-[#2C3E50]">Upload Business Logo</label>
@@ -152,7 +178,7 @@ export default function RegisterBusinessPage() {
         className="w-full bg-[#2C3E50] text-white font-semibold py-3 rounded-lg transition-colors hover:bg-[#1a2734]"
         type="submit"
       >
-        Continue to Plan
+        Continue to Account Creation
       </button>
     </form>
   );

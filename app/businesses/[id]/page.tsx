@@ -1,3 +1,4 @@
+
 'use client'
 import { useParams } from "next/navigation";
 import businessesData from "../../../data/businesses.json";
