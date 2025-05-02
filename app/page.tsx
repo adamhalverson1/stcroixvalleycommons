@@ -12,38 +12,42 @@ export default function Home() {
   const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
   const [featuredBusinesses, setFeaturedBusinesses] = useState<Business[]>([]);
 
-// Fetch businesses from Firestore
-const fetchBusinesses = async () => {
-  try {
-    const querySnapshot = await getDocs(collection(db, "businesses"));
-    const businesses: Business[] = querySnapshot.docs
-    .map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        image: data.image || data.imageUrl || '', // normalize image field
-      };
-    })
-      .filter((b: any) => b.subscriptionStatus === "active" && b.plan === "featured") as Business[];
-
-    setAllBusinesses(businesses);
-    setFeaturedBusinesses(getRandomBusinesses(businesses));
-  } catch (error) {
-    console.error("Error fetching businesses:", error);
-  }
-  
-};
-
   // Get 15 random businesses
   const getRandomBusinesses = (businessList: Business[]) => {
     const shuffled = [...businessList].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 15);
   };
 
-  // Fetch and rotate businesses
+  // Fetch businesses from Firestore
+  const fetchBusinesses = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "businesses"));
+      const businesses: Business[] = querySnapshot.docs
+        .map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            image: data.image || data.imageUrl || '',
+          };
+        })
+        .filter((b: any) => b.subscriptionStatus === "active" && b.plan === "featured") as Business[];
+
+      setAllBusinesses(businesses);
+      setFeaturedBusinesses(getRandomBusinesses(businesses));
+    } catch (error) {
+      console.error("Error fetching businesses:", error);
+    }
+  };
+
+  // Fetch once on mount
   useEffect(() => {
     fetchBusinesses();
+  }, []);
+
+  // Rotate featured businesses every 30 seconds
+  useEffect(() => {
+    if (allBusinesses.length === 0) return;
 
     const interval = setInterval(() => {
       setFeaturedBusinesses(getRandomBusinesses(allBusinesses));
@@ -59,7 +63,7 @@ const fetchBusinesses = async () => {
       </Head>
 
       <main className="bg-gray-100 min-h-screen px-6 py-8">
-        <h1 className="text-3xl font-bold text-center text-[#7DA195]  mb-6">
+        <h1 className="text-3xl font-bold text-center text-[#7DA195] mb-6">
           Find Local Businesses
         </h1>
 

@@ -13,6 +13,17 @@ import {
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
+const daysOfWeek = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
+
 export default function DashboardPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [business, setBusiness] = useState<any>(null);
@@ -30,6 +41,8 @@ export default function DashboardPage() {
     state: '',
     website: '',
     category: '',
+    description: '',
+    hours: '',
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -74,6 +87,8 @@ export default function DashboardPage() {
             state: data.state || '',
             website: data.website || '',
             category: data.category || '',
+            description: data.description || '',
+            hours: data.hours || '',
           });
         }
       } catch (error) {
@@ -202,122 +217,242 @@ export default function DashboardPage() {
     }
   };
 
+  const [daysOpen, setDaysOpen] = useState<string[]>([]);
+  const [form, setForm] = useState<{
+    hours: {
+      [key: string]: { open: string; close: string };
+    };
+  }>({
+    hours: {},
+  });
+
+  const handleHoursChange = (day: string, field: "open" | "close", value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      hours: {
+        ...prev.hours,
+        [day]: {
+          ...prev.hours[day],
+          [field]: value,
+        },
+      },
+    }));
+  };
+
+  const handleDayToggle = (day: string) => {
+    setDaysOpen((prev) => {
+      const updated = prev.includes(day)
+        ? prev.filter((d) => d !== day)
+        : [...prev, day];
+
+      // If adding the day, ensure it has default time
+      if (!prev.includes(day)) {
+        setForm((prevForm) => ({
+          ...prevForm,
+          hours: {
+            ...prevForm.hours,
+            [day]: prevForm.hours[day] || { open: "", close: "" },
+          },
+        }));
+      }
+
+      return updated;
+    });
+  };
+
+
   if (loading) return <p>Loading...</p>;
   if (!business) return <p>No business found for your account.</p>;
 
-  return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-2xl font-semibold">Business Dashboard</h1>
-
-      <div className="p-4 border rounded space-y-4">
-        <h2 className="text-xl font-medium">Business Info</h2>
-        <div>
-          <label className="block font-medium">Business Image</label>
-          {imageUrl && (
-            <img
-              src={imageUrl}
-              alt={business.name}
-              className="w-48 h-48 object-cover mb-2 rounded border"
-            />
-          )}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="block border rounded border-white px-2"
-          />
-          {uploadingImage && <p className="text-sm text-gray-500">Uploading...</p>}
+  return (      
+      <div className="bg-gray-100 min-h-screen px-6">
+        <h1 className="text-3xl font-bold text-[#4C7C59] flex justify-center">Business Dashboard</h1>
+    
+        {/* Business Info */}
+        <div className="bg-white shadow-md rounded-xl p-6 space-y-6">
+          <h2 className="text-2xl font-semibold text-[#4C7C59] flex justify-center">Business Info</h2>
+    
+          {/* Form Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {['name', 'phone', 'email', 'address', 'city', 'state', 'website'].map((field) => (
+              <div key={field}>
+                <label className="block text-sm font-medium text-gray-700 capitalize mb-1">{field}</label>
+                <input
+                  type="text"
+                  name={field}
+                  value={(formState as any)[field]}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 text-black focus:ring-[#4C7C59]"
+                />
+              </div>
+            ))}
           </div>
-        {['name', 'phone', 'email', 'address', 'city', 'state', 'website'].map((field) => (
-          <div key={field}>
-            <label className="block font-medium capitalize">{field}</label>
-            <input
-              type="text"
-              name={field}
-              value={(formState as any)[field]}
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              name="description"
+              value={formState.description}
               onChange={handleChange}
-              className="w-full border p-2 rounded"
+              rows={4}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 text-black focus:ring-[#4C7C59]"
             />
-          
           </div>
 
-        
+          <div className="border rounded-lg p-4 bg-gray-50">
+      <h3 className="text-lg font-semibold text-[#2C3E50] mb-4 text-center">
+        Business Hours
+      </h3>
+
+      <div className="space-y-2 mb-4">
+        <p className="text-sm text-[#2C3E50] font-medium">
+          Select the days your business is open:
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {daysOfWeek.map((day) => (
+            <label
+              key={day}
+              className="flex items-center space-x-2 text-[#2C3E50]"
+            >
+              <input
+                type="checkbox"
+                checked={daysOpen.includes(day)}
+                onChange={() => handleDayToggle(day)}
+              />
+              <span>{day}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {daysOpen.map((day) => (
+          <div key={day} className="flex items-center justify-between gap-4">
+            <span className="w-1/4 font-medium text-[#2C3E50]">{day}</span>
+            <input
+              type="time"
+              value={form.hours[day]?.open || ""}
+              onChange={(e) => handleHoursChange(day, "open", e.target.value)}
+              className="w-full border rounded px-2 py-1 text-[#2C3E50]"
+              required
+            />
+            <span className="text-sm text-[#2C3E50]">to</span>
+            <input
+              type="time"
+              value={form.hours[day]?.close || ""}
+              onChange={(e) => handleHoursChange(day, "close", e.target.value)}
+              className="w-full border rounded px-2 py-1 text-[#2C3E50]"
+              required
+            />
+          </div>
         ))}
-
-        <div>
-          <label className="block font-medium">Category</label>
-          <select
-            name="category"
-            value={formState.category}
-            onChange={handleChange}
-            className="w-full border px-3 py-2 rounded"
-            required
-          >
-            <option value="">Select Category</option>
-            <option value="Retail & Consumer Goods">Retail & Consumer Goods</option>
-            <option value="Food & Beverage">Food & Beverage</option>
-            <option value="Professional Services">Professional Services</option>
-            <option value="Health & Wellness">Health & Wellness</option>
-            <option value="Education & Training">Education & Training</option>
-            <option value="Technology & IT">Technology & IT</option>
-            <option value="Finance & Insurance">Finance & Insurance</option>
-            <option value="Automotive">Automotive</option>
-            <option value="Home Services">Home Services</option>
-            <option value="Arts, Entertainment & Recreation">Arts, Entertainment & Recreation</option>
-            <option value="Logistics & Transportation">Logistics & Transportation</option>
-            <option value="Pets & Animals">Pets & Animals</option>
-          </select>
-        </div>
-
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-        >
-          {saving ? 'Saving...' : 'Save Changes'}
-        </button>
       </div>
+    </div>
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <select
+              name="category"
+              value={formState.category}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none text-black focus:ring-2 focus:ring-[#4C7C59]"
+            >
+              <option value="">Select Category</option>
+              {[
+                'Retail & Consumer Goods',
+                'Food & Beverage',
+                'Professional Services',
+                'Health & Wellness',
+                'Education & Training',
+                'Technology & IT',
+                'Finance & Insurance',
+                'Automotive',
+                'Home Services',
+                'Arts, Entertainment & Recreation',
+                'Logistics & Transportation',
+                'Pets & Animals',
+              ].map((category) => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
 
-      <div className="p-4 border rounded space-y-4">
-        <h2 className="text-xl font-medium">Subscription</h2>
-        <div>
-          <label className="block font-medium pb-5"><strong>Plan</strong></label>
-          <p className='pb-5'>You are currently subscribed to <strong>{business.plan}</strong> you can change this at any time by selecting a different plan from the drop-down menu below. </p>
-          <select
-            name="plan"
-            value={formState.plan}
-            onChange={handleChange}
-            className="w-full border px-3 py-2 rounded"
-          >
-            <option value="Basic">Basic</option>
-            <option value="Featured">Featured</option>
-          </select>
+          {/* Business Image */}
+          <div>
+            <label className="block mb-1 font-medium text-[#2C3E50]">Business Image</label>
+            {imageUrl && (
+              <img
+                src={imageUrl}
+                alt={business.name}
+                className="w-32 h-32 object-cover rounded-md border mb-3"
+              />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="file-input file-input-bordered w-full max-w-xs"
+            />
+            {uploadingImage && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
+          </div>
+    
+          <div className="pt-2">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-[#4C7C59] hover:bg-[#7DA195] text-white font-medium px-5 py-2 rounded-md transition disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
         </div>
-
-        <p><strong>Status:</strong> {business.subscriptionStatus || 'Not subscribed'}</p>
-        {business.canceled_at && (
-        <p><strong>Canceled At:</strong> {new Date(business.canceled_at).toLocaleString()}</p>
-        )}
-
-      {business.subscriptionStatus === 'active' && (
-        <div className='flex justify-center space-x-4'>
-          <button
-            onClick={handleChangePlan}
-            disabled={updatingPlan}
-            className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
-          >
-            {updatingPlan ? 'Updating...' : 'Update Plan'}
-          </button>
-          <button
-            onClick={handleCancelSubscription}
-            disabled={cancelling}
-            className="bg-red-600 text-white px-4 py-2 rounded disabled:opacity-50"
-          >
-            {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
-          </button>
+    
+        {/* Subscription Section */}
+        <div className="bg-white shadow-md rounded-xl p-6 space-y-4">
+          <h2 className="text-2xl font-semibold text-[#4C7C59] flex justify-center">Subscription</h2>
+          <div>
+            <p className="text-gray-600">
+              You are currently subscribed to <strong>{business.plan}</strong>. You can change your plan below:
+            </p>
+            <select
+              name="plan"
+              value={formState.plan}
+              onChange={handleChange}
+              className="w-full mt-2 border border-gray-300 rounded-md px-3 py-2 focus:outline-none text-black focus:ring-2 focus:ring-[#4C7C59]"
+            >
+              <option value="Basic">Basic</option>
+              <option value="Featured">Featured</option>
+            </select>
+          </div>
+    
+          <p className="text-sm text-gray-700">
+            <strong>Status:</strong> {business.subscriptionStatus || 'Not subscribed'}
+          </p>
+          {business.canceled_at && (
+            <p className="text-sm text-red-600">
+              <strong>Canceled At:</strong> {new Date(business.canceled_at).toLocaleString()}
+            </p>
+          )}
+    
+          {business.subscriptionStatus === 'active' && (
+            <div className="flex gap-4 pt-2">
+              <button
+                onClick={handleChangePlan}
+                disabled={updatingPlan}
+                className="bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2 rounded-md transition disabled:opacity-50"
+              >
+                {updatingPlan ? 'Updating...' : 'Update Plan'}
+              </button>
+              <button
+                onClick={handleCancelSubscription}
+                disabled={cancelling}
+                className="bg-red-600 hover:bg-red-700 text-white font-medium px-5 py-2 rounded-md transition disabled:opacity-50"
+              >
+                {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
+              </button>
+            </div>
+          )}
         </div>
-      )}
       </div>
-      </div>
-  );
-}
+    );
+  }    

@@ -20,11 +20,13 @@ export default function BusinessCard({ business }: BusinessCardProps) {
       <img 
         src={business.image || '/placeholder.jpg'} 
         alt={business.name} 
-        className="w-full h-40 object-cover rounded-md"
+        className="flex object-center w-40 h-40 rounded-md"
       />
-      <h3 className="text-lg font-semibold mt-2">{business.name}</h3>
-      <p className="text-sm text-gray-600">{business.category}</p>
-      <p className="text-sm text-gray-500">{business.address}</p>
+      <h3 className="text-lg font-semibold mt-2 text-[#7DA195] flex justify-center">{business.name}</h3>
+      <p className="text-sm text-gray-600"><strong>{business.category}</strong></p>
+      <p className="text-sm text-gray-600">{business.address}</p>
+      <p className="text-sm text-gray-600">{business.city}</p>
+      <p className="text-sm text-gray-600">{business.state}</p>
     </div>
   );
 }

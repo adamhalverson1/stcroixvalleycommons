@@ -56,7 +56,7 @@ export default function BusinessDetailPage() {
           <img 
             src={business.image} 
             alt={business.name} 
-            className="w-full h-64 object-cover rounded-md"
+            className="w-sm h-sm object-cover flex justify-center rounded-md"
           />
         )}
         <h1 className="text-3xl font-bold mt-4">{business.name}</h1>
