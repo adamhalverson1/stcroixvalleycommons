@@ -25,6 +25,7 @@ export default function Navbar() {
   };
 
   return (
+    <>
     <nav className="bg-[#2C3E50] shadow-md">
       <div className="container mx-auto flex justify-between items-center p-4">
         <Link href="/" className="text-2xl font-bold text-[#4C7C59]">
@@ -87,5 +88,6 @@ export default function Navbar() {
         </div>
       )}
     </nav>
+  </>
   );
 }
