@@ -1,9 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from '@/lib/firebase';
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[\s\W-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 export default function PostSignup() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -18,14 +26,24 @@ export default function PostSignup() {
         try {
           setUserId(user.uid);
           const data = JSON.parse(businessData);
-          await addDoc(collection(db, 'businesses'), {
+          const baseSlug = slugify(data.name);
+          let slug = baseSlug;
+          let counter = 1;
+
+          // Ensure unique slug
+          while ((await getDoc(doc(db, 'businesses', slug))).exists()) {
+            slug = `${baseSlug}-${counter++}`;
+          }
+
+          await setDoc(doc(db, 'businesses', slug), {
             ...data,
             userId: user.uid,
+            slug,
             createdAt: serverTimestamp(),
           });
 
           localStorage.removeItem('pendingBusinessData');
-          window.location.href = '/dashboard';
+          window.location.href = `/dashboard/${slug}`;
         } catch (err) {
           console.error('Error registering business post-signup:', err);
         }

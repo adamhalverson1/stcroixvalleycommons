@@ -3,10 +3,18 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { db, storage } from '@/lib/firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import SignUpForm from '@/components/SignUpForm';
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[\s\W-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -27,29 +35,39 @@ export default function SignUpPage() {
         const business = JSON.parse(formData);
 
         try {
+          // 1. Slugify and ensure uniqueness
+          const baseSlug = slugify(business.name);
+          let slug = baseSlug;
+          let counter = 1;
+          while ((await getDoc(doc(db, 'businesses', slug))).exists()) {
+            slug = `${baseSlug}-${counter++}`;
+          }
+
           let imageUrl = null;
 
-          // 1. Upload image to Firebase Storage (if exists)
+          // 2. Upload image to Firebase Storage (if exists)
           if (imageDataUrl) {
-            const storageRef = ref(storage, `businessImages/${firebaseUser.uid}_${Date.now()}.jpg`);
+            const storageRef = ref(storage, `businesses/${slug}/image.jpg`);
             await uploadString(storageRef, imageDataUrl, 'data_url');
             imageUrl = await getDownloadURL(storageRef);
           }
 
-          // 2. Add business to Firestore
-          const docRef = await addDoc(collection(db, 'businesses'), {
+          // 3. Save business to Firestore using the slug as document ID
+          await setDoc(doc(db, 'businesses', slug), {
             ...business,
             createdAt: serverTimestamp(),
             userId: firebaseUser.uid,
-            imageUrl,
+            image: imageUrl,
+            slug,
             plan: planType || null,
           });
 
-          // 3. Clean up localStorage and redirect
+          // 4. Clean up localStorage and redirect
           localStorage.removeItem('pendingBusiness');
           localStorage.removeItem('pendingBusinessImage');
           localStorage.removeItem('selectedPlan');
-          localStorage.setItem('businessId', docRef.id);
+          localStorage.setItem('businessId', slug); // Save slug, not random ID
+
           router.push('/select-plan');
         } catch (err) {
           console.error('Error saving business after sign-up:', err);

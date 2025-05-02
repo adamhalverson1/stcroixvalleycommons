@@ -2,15 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { onAuthStateChanged, getAuth } from 'firebase/auth';
 import { db, storage } from '@/lib/firebase';
-import {
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { ref, uploadBytes } from 'firebase/storage';
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 function slugify(text: string): string {
   return text
@@ -23,16 +18,17 @@ function slugify(text: string): string {
 export default function CompleteRegistrationPage() {
   const router = useRouter();
   const [status, setStatus] = useState('Submitting...');
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const submitData = async () => {
-      const auth = getAuth();
-      const user = auth.currentUser;
-
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         setStatus('User not signed in.');
         return;
       }
+
+      setUserId(user.uid);
 
       const storedForm = localStorage.getItem('pendingBusiness');
       const storedImage = localStorage.getItem('pendingBusinessImage');
@@ -46,47 +42,42 @@ export default function CompleteRegistrationPage() {
       const baseSlug = slugify(form.name);
       let slug = baseSlug;
       let counter = 1;
-      
-      console.log("Checking slug uniqueness starting with:", baseSlug);
-      
-      // Ensure unique slug
+
+      // Ensure the slug is unique in Firestore
       while ((await getDoc(doc(db, 'businesses', slug))).exists()) {
-        console.log(`Slug "${slug}" already exists. Trying next...`);
         slug = `${baseSlug}-${counter++}`;
       }
-      
-      console.log("Final slug to be used:", slug);
-      
+
       try {
-        await setDoc(doc(db, 'businesses', slug), {
-          ...form,
-          userId: user.uid, // Make sure this is Firebase auth user, not Clerk
-          slug,
-          createdAt: serverTimestamp(),
-        });
-      
-        console.log("Successfully saved business with slug:", slug);
-      
+        let imageUrl = '';
+
         if (storedImage) {
           const imageBlob = await (await fetch(storedImage)).blob();
           const imageRef = ref(storage, `businesses/${slug}/image.jpg`);
           await uploadBytes(imageRef, imageBlob);
-          console.log("Uploaded business image");
+          imageUrl = await getDownloadURL(imageRef);
         }
-      
+
+        await setDoc(doc(db, 'businesses', slug), {
+          ...form,
+          slug,
+          userId: user.uid,
+          image: imageUrl,
+          createdAt: serverTimestamp(),
+        });
+
         localStorage.removeItem('pendingBusiness');
         localStorage.removeItem('pendingBusinessImage');
-      
+
         setStatus('✅ Business successfully registered.');
-        router.push(`/dashboard/${slug}`);
-      } catch (err) {
-        console.error("Error saving business:", err);
+        router.push(`/businesses/${slug}`);
+      } catch (error) {
+        console.error(error);
         setStatus('❌ Failed to register business.');
       }
-      
-    };
+    });
 
-    submitData();
+    return () => unsubscribe();
   }, [router]);
 
   return <p className="text-center mt-10">{status}</p>;
