@@ -20,10 +20,14 @@ export default function BusinessDirectory() {
         const q = query(businessesRef, where("subscriptionStatus", "==", "active"));
         const snapshot = await getDocs(q);
 
-        const activeBusinesses = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Business[];
+        const activeBusinesses = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            image: data.image || data.imageUrl || '', // normalize image field
+          };
+        }) as Business[];
 
         // Sort alphabetically
         const sorted = activeBusinesses.sort((a, b) =>

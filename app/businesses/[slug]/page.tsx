@@ -19,7 +19,12 @@ export default function BusinessDetailPage() {
         const docRef = doc(db, 'businesses', slug);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setBusiness(docSnap.data() as Business);
+          const data = docSnap.data();
+          setBusiness({
+            ...data,
+            id: docSnap.id,
+            image: data.image || data.imageUrl || '',
+          } as Business);
         } else {
           setBusiness(null);
         }

@@ -17,10 +17,14 @@ const fetchBusinesses = async () => {
   try {
     const querySnapshot = await getDocs(collection(db, "businesses"));
     const businesses: Business[] = querySnapshot.docs
-      .map(doc => ({
+    .map(doc => {
+      const data = doc.data();
+      return {
         id: doc.id,
-        ...doc.data(),
-      }))
+        ...data,
+        image: data.image || data.imageUrl || '', // normalize image field
+      };
+    })
       .filter((b: any) => b.subscriptionStatus === "active" && b.plan === "featured") as Business[];
 
     setAllBusinesses(businesses);
