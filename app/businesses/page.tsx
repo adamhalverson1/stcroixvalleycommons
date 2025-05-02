@@ -53,7 +53,7 @@ export default function BusinessDirectory() {
       </h1>
 
       {loading ? (
-        <p className="text-center text-[#4A4A4A]">Loading businesses...</p>
+        <p className=" min-h-screen bg-gray-100 p-6 text-center text-[#7DA195]">Loading businesses...</p>
       ) : (
         <>
           {/* Business List */}

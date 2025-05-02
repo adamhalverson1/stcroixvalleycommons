@@ -37,11 +37,11 @@ export default function BusinessDetailPage() {
   }, [slug]);
 
   if (loading) {
-    return <div className="text-center mt-10 text-gray-600">Loading...</div>;
+    return <div className="min-h-screen bg-gray-100 p-6 text-center text-[#7DA195]">Loading...</div>;
   }
 
   if (!business) {
-    return <div className="text-center text-red-500 mt-10">Business not found</div>;
+    return <div className="min-h-screen bg-gray-100 p-6 text-center text-red-500 mt-10">Business not found</div>;
   }
 
   return (

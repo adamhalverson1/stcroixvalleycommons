@@ -28,6 +28,7 @@ const fetchBusinesses = async () => {
   } catch (error) {
     console.error("Error fetching businesses:", error);
   }
+  
 };
 
   // Get 15 random businesses

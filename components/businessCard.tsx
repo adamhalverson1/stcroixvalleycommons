@@ -9,7 +9,7 @@ export default function BusinessCard({ business }: BusinessCardProps) {
   const router = useRouter();
 
   const handleClick = () => {
-    router.push(`/businesses/${business.id}`); // This must match the dynamic route
+    router.push(`/businesses/${business.slug}`); // Use slug for routing
   };
 
   return (
@@ -18,7 +18,7 @@ export default function BusinessCard({ business }: BusinessCardProps) {
       className="cursor-pointer border border-gray-200 text-[#7DA195] rounded-lg shadow-md p-4 hover:shadow-lg transition"
     >
       <img 
-        src={business.image} 
+        src={business.image || '/placeholder.jpg'} 
         alt={business.name} 
         className="w-full h-40 object-cover rounded-md"
       />
