@@ -4,10 +4,10 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-03-31.basil', 
+  apiVersion: '2025-03-31.basil',
 });
 
-// Firebase Admin init
+// Initialize Firebase Admin SDK
 if (!getApps().length) {
   initializeApp({
     credential: cert({
@@ -20,7 +20,7 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-// Helper to read raw body
+// Helper to read raw body from request
 async function buffer(readable: ReadableStream<Uint8Array>) {
   const reader = readable.getReader();
   const chunks: Uint8Array[] = [];
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     try {
       const subscriptionId = session.subscription as string;
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const { data: subscription } = await stripe.subscriptions.retrieve(subscriptionId);
 
       const currentPeriodEndTimestamp = subscription.current_period_end
         ? Timestamp.fromDate(new Date(subscription.current_period_end * 1000))
