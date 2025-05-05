@@ -36,38 +36,102 @@ export default function BusinessDetailPage() {
       }
     };
 
-    if (slug) {
-      fetchBusiness();
-    }
+    if (slug) fetchBusiness();
   }, [slug]);
 
   if (loading) {
-    return <div className="min-h-screen bg-gray-100 p-6 text-center text-[#7DA195]">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 text-[#7DA195] text-xl font-medium">
+        Loading...
+      </div>
+    );
   }
 
   if (!business) {
-    return <div className="min-h-screen bg-gray-100 p-6 text-center text-red-500 mt-10">Business not found</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 text-red-500 text-xl font-semibold">
+        Business not found
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen p-8 bg-gray-100">
-      <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    <div className="min-h-screen bg-gray-100 py-10 px-4">
+      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-md p-6 sm:p-10">
+        {/* Image */}
         {business.image && (
-          <img 
-            src={business.image} 
-            alt={business.name} 
-            className="w-sm h-sm object-cover flex justify-center rounded-md"
-          />
+          <div className="flex justify-center">
+            <img
+              src={business.image}
+              alt={business.name}
+              className="w-full max-w-lg rounded-lg object-cover shadow"
+            />
+          </div>
         )}
-        <h1 className="text-3xl font-bold mt-4">{business.name}</h1>
-        <p className="text-lg text-gray-700 mt-2">{business.description}</p>
-        <p className="text-sm text-gray-600 mt-2">
-          <strong>Category:</strong> {business.category}
-        </p>
-        <p className="text-sm text-gray-600 mt-2">
-          <strong>Location:</strong> {business.address}
-        </p>
+
+        {/* Name & Description */}
+        <h1 className="text-3xl sm:text-4xl font-bold text-center text-[#4C7C59] mt-6">
+          {business.name}
+        </h1>
+        {business.description && (
+          <p className="text-md sm:text-lg text-center text-gray-700 mt-4">
+            {business.description}
+          </p>
+        )}
+
+        {/* Details */}
+        <div className="mt-8 grid sm:grid-cols-2 gap-4 text-gray-700 text-sm">
+          {business.category && (
+            <Detail label="Category" value={business.category} />
+          )}
+          {business.address && (
+            <Detail label="Address" value={business.address} />
+          )}
+          {business.city && (
+            <Detail label="City" value={business.city} />
+          )}
+          {business.state && (
+            <Detail label="State" value={business.state} />
+          )}
+          {business.phone && (
+            <Detail label="Phone" value={business.phone} />
+          )}
+          {business.email && (
+            <Detail label="Email" value={<a href={`mailto:${business.email}`} className="text-blue-600 hover:underline">{business.email}</a>} />
+          )}
+          {business.website && (
+            <Detail label="Website" value={<a href={business.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{business.website}</a>} />
+          )}
+        </div>
+
+        {/* Hours */}
+        {business.hours && typeof business.hours === 'object' && (
+          <div className="mt-10">
+            <h2 className="text-xl font-semibold text-[#4C7C59] mb-4">Business Hours</h2>
+            <ul className="divide-y divide-gray-200 text-sm text-[#4C7C59]">
+              {Object.entries(business.hours).map(([day, time]: [string, any]) => (
+                <li key={day} className="flex justify-between py-2">
+                  <span className="font-medium">{day}</span>
+                  <span>
+                    {time?.open && time?.close
+                      ? `${time.open} - ${time.close}`
+                      : 'Closed'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-gray-500 font-medium">{label}</p>
+      <p className="mt-1">{value}</p>
     </div>
   );
 }
