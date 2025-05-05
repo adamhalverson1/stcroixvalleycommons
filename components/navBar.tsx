@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { FiMenu, FiX } from 'react-icons/fi';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -27,19 +28,23 @@ export default function Navbar() {
 
   return (
     <>
+      {/* Logo section */}
+      <div className="bg-gray-100  py-4 flex justify-center border-b">
+        <Link href="/" className="block">
+          <Image
+            src="/stcroixvalleycommons.png"
+            alt="St Croix Valley Commons Logo"
+            width={400}
+            height={100}
+            className="object-contain"
+            priority
+          />
+        </Link>
+      </div>
+
+      {/* Navbar section */}
       <nav className="bg-[#2C3E50] shadow-md">
         <div className="container mx-auto flex justify-between items-center p-4">
-          <Link href="/" className="text-2xl font-bold text-[#4C7C59]">
-            St Croix Valley Commons
-          </Link>
-
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-gray-700"
-          >
-            {isOpen ? <FiX size={28} /> : <FiMenu size={28} />}
-          </button>
-
           <div className="hidden md:flex space-x-6 items-center">
             <Link href="/" className="text-white font-bold hover:text-[#7DA195]">Home</Link>
             <Link href="/businesses" className="text-white font-bold hover:text-[#7DA195]">Business Directory</Link>
@@ -84,6 +89,13 @@ export default function Navbar() {
               </>
             )}
           </div>
+
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden text-white"
+          >
+            {isOpen ? <FiX size={28} /> : <FiMenu size={28} />}
+          </button>
         </div>
 
         {isOpen && (

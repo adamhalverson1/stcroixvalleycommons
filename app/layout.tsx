@@ -2,7 +2,6 @@ import './globals.css';
 import { ReactNode } from 'react';
 import Navbar from '@/components/navBar';
 import Footer from '@/components/footer';
-import { ClerkProvider } from "@clerk/nextjs";
 
 export const metadata = {
   title: 'St Croix Valley Commons',
