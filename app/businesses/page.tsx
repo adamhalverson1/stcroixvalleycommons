@@ -5,6 +5,7 @@ import { db } from "../../lib/firebase"; // Adjust path if needed
 
 import BusinessCard from "../../components/businessCard";
 import { Business } from "../../types/business";
+import SearchBar from "@/components/searchBar";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -12,7 +13,8 @@ export default function BusinessDirectory() {
   const [currentPage, setCurrentPage] = useState(1);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [searchQuery, setSearchQuery] = useState("");
+  
   useEffect(() => {
     const fetchBusinesses = async () => {
       try {
@@ -56,12 +58,15 @@ export default function BusinessDirectory() {
         Business Directory
       </h1>
 
+      <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      
+
       {loading ? (
-        <p className=" min-h-screen bg-gray-100 p-6 text-center text-[#7DA195]">Loading businesses...</p>
+        <p className=" min-h-screen bg-gray-100 p-6  mt-8 text-center text-[#7DA195]">Loading businesses...</p>
       ) : (
         <>
           {/* Business List */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {currentBusinesses.map((business) => (
               <BusinessCard key={business.id} business={business} />
             ))}
