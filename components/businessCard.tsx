@@ -19,7 +19,7 @@ export default function BusinessCard({ business }: BusinessCardProps) {
     >
       <div className="flex flex-col items-center text-center">
         <img
-          src={business.image || '/placeholder.jpg'}
+          src={business.image || '/placeholder.png'}
           alt={business.name}
           className="object-cover w-sm h-sm rounded-md mb-4"
         />

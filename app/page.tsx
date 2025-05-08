@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import Head from "next/head";
 import BusinessCard from "../components/businessCard";
 import SearchBar from "../components/searchBar";
+import CityList from "@/components/CityFilter";
+import CategoryList from "@/components/CategoryFilter";
 import { Business } from "../types/business";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../lib/firebase"; // adjust path to your firebase config
@@ -11,6 +13,8 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
   const [featuredBusinesses, setFeaturedBusinesses] = useState<Business[]>([]);
+  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   // Get 15 random businesses
   const getRandomBusinesses = (businessList: Business[]) => {
@@ -69,6 +73,10 @@ export default function Home() {
 
         {/* Search Bar */}
         <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        <div className="my-4">
+          <CityList selectedCity={selectedCity} onCityChange={setSelectedCity} />
+          <CategoryList selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
+        </div>
 
         {/* Featured Businesses */}
         <section className="mt-8">
