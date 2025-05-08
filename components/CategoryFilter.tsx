@@ -43,9 +43,9 @@ export default function CategoryList({ selectedCategory, onCategoryChange }: Pro
               onClick={() => onCategoryChange(category)}
               className={`px-4 py-2 rounded border ${
                 selectedCategory === category
-                  ? 'bg-[#2C3E50] text-white'
+                  ? 'bg-[#4C7C59] text-white'
                   : 'bg-white text-gray-800 border-gray-300'
-              } hover:bg-[#2C3E50] hover:text-white transition`}
+              } hover:bg-[#4C7C59]  hover:text-white transition`}
             >
               {category}
             </button>

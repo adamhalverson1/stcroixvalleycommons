@@ -61,6 +61,13 @@ export default function Navbar() {
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
                     <Link
+                      href="/why-advertise"
+                      className="block px-4 py-2 text-sm text-[#2C3E50] hover:bg-[#f0f0f0]"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Why Advertise Here?
+                    </Link>
+                    <Link
                       href="/login"
                       className="block px-4 py-2 text-sm text-[#2C3E50] hover:bg-[#f0f0f0]"
                       onClick={() => setDropdownOpen(false)}

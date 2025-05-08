@@ -42,9 +42,9 @@ export default function CityList({ selectedCity, onCityChange }: Props) {
             onClick={() => onCityChange('')}
             className={`px-4 py-2 rounded border ${
               selectedCity === ''
-                ? 'bg-[#2C3E50] text-white'
+                ? 'bg-[#4C7C59] text-white'
                 : 'bg-white text-gray-800 border-gray-300'
-            } hover:bg-[#2C3E50] hover:text-white transition`}
+            } hover:bg-[#4C7C59] hover:text-white transition`}
           >
             All Cities
           </button>
@@ -56,9 +56,9 @@ export default function CityList({ selectedCity, onCityChange }: Props) {
               onClick={() => onCityChange(city)}
               className={`px-4 py-2 rounded border ${
                 selectedCity === city
-                  ? 'bg-[#2C3E50] text-white'
+                  ? 'bg-[#4C7C59]  text-white'
                   : 'bg-white text-gray-800 border-gray-300'
-              } hover:bg-[#2C3E50] hover:text-white transition`}
+              } hover:bg-[#4C7C59]  hover:text-white transition`}
             >
               {city}
             </button>

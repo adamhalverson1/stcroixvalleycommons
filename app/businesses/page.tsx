@@ -6,7 +6,8 @@ import { db } from '../../lib/firebase';
 import BusinessCard from '../../components/businessCard';
 import { Business } from '../../types/business';
 import SearchBar from '@/components/searchBar';
-
+import CityList from '@/components/CityFilter'; // Updated component: click-to-filter
+import CategoryList from '@/components/CategoryFilter'; // Updated component: click-to-filter
 
 const ITEMS_PER_PAGE = 15;
 
@@ -15,6 +16,8 @@ export default function BusinessDirectory() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   useEffect(() => {
     const fetchBusinesses = async () => {
@@ -66,6 +69,10 @@ export default function BusinessDirectory() {
       </h1>
 
       <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      <div className="my-4">
+        <CityList selectedCity={selectedCity} onCityChange={setSelectedCity} />
+        <CategoryList selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
+      </div>
 
       {loading ? (
         <p className="min-h-screen bg-gray-100 p-6 mt-8 text-center text-[#7DA195]">Loading businesses...</p>
