@@ -49,6 +49,7 @@ export default function Navbar() {
             <Link href="/" className="text-white font-bold hover:text-[#7DA195]">Home</Link>
             <Link href="/businesses" className="text-white font-bold hover:text-[#7DA195]">Business Directory</Link>
             <Link href="/events" className="text-white font-bold hover:text-[#7DA195]">Events</Link>
+            <Link href="/coupons" className="text-white font-bold hover:text-[#7DA195]">Coupons</Link>
 
             {!isAuthenticated ? (
               <div className="relative">
