@@ -83,7 +83,18 @@ export default function RegisterBusinessPage() {
         <option value="Wisconsin">Wisconsin</option>
       </select>
 
-      <input className="w-full border rounded px-4 py-2 text-[#2C3E50]" name="website" onChange={handleChange} placeholder="Website" />
+      <textarea
+        className="w-full border rounded px-4 py-2 text-[#2C3E50]"
+        name="ServiceArea"
+        onChange={(e) => setForm({ ...form, description: e.target.value })}
+        placeholder="Areas Served by Your Business"
+        rows={2}
+      />
+
+      <input className="w-full border rounded px-4 py-2 text-[#2C3E50]" name="Facebook" onChange={handleChange} placeholder="Facebook"/>
+      <input className="w-full border rounded px-4 py-2 text-[#2C3E50]" name="Twitter" onChange={handleChange} placeholder="Twitter"/>
+      <input className="w-full border rounded px-4 py-2 text-[#2C3E50]" name="Instagram" onChange={handleChange} placeholder="Instagram"/>
+      <input className="w-full border rounded px-4 py-2 text-[#2C3E50]" name="website" onChange={handleChange} placeholder="Website"/>
 
       <select
         name="category"
