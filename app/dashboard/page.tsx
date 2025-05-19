@@ -262,7 +262,30 @@ export default function DashboardPage() {
 
 
   if (loading) return <p>Loading...</p>;
-  if (!business) return <p>No business found for your account.</p>;
+ if (!business) {
+  return (
+    <div className="bg-gray-100 min-h-screen flex items-center justify-center px-4">
+      <div className="bg-white shadow-md rounded-xl p-6 max-w-md text-center">
+        <h2 className="text-2xl font-semibold text-[#4C7C59] mb-4">
+          No Business Found
+        </h2>
+        <p className="text-gray-700 mb-4">
+          We couldn’t find a business associated with your account.
+        </p>
+        <p className="text-gray-600">
+          If you believe this is an error, please contact us at{" "}
+          <a
+            href="mailto:support@willowriverdigital.com"
+            className="text-[#0046a4] font-medium underline"
+          >
+            support@willowriverdigital.com
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (      
       <div className="bg-gray-100 min-h-screen px-6">
