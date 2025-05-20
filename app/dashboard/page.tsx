@@ -40,6 +40,10 @@ export default function DashboardPage() {
     city: '',
     state: '',
     website: '',
+    Facebook: '',
+    Twitter: '',
+    Instagram: '',
+    serviceArea: '',
     category: '',
     description: '',
     hours: '',
@@ -86,11 +90,24 @@ export default function DashboardPage() {
             city: data.city || '',
             state: data.state || '',
             website: data.website || '',
+            Facebook: data.Facebook || '',
+            Twitter: data.Twitter || '',
+            Instagram: data.Instagram || '',
+            serviceArea: data.serviceArea || '',
             category: data.category || '',
             description: data.description || '',
             hours: data.hours || '',
           });
+
+          if (data.hours && typeof data.hours === 'object') {
+          const openDays = Object.keys(data.hours);
+          setDaysOpen(openDays);
+          setForm({ hours: data.hours });
+  }
         }
+
+
+
       } catch (error) {
         console.error('Error fetching business:', error);
       } finally {
@@ -111,15 +128,17 @@ export default function DashboardPage() {
     setSaving(true);
     try {
       const businessRef = doc(db, 'businesses', business.id);
-      await updateDoc(businessRef, { ...formState });
-      setBusiness(prev => ({ ...prev, ...formState }));
+      await updateDoc(businessRef, {
+        ...formState,
+        hours: form.hours, // ✅ This is the structured hours object
+      });
+      setBusiness(prev => ({ ...prev, ...formState, hours: form.hours }));
     } catch (error) {
       console.error('Error saving business info:', error);
     } finally {
       setSaving(false);
     }
   };
-
   const handleChangePlan = async () => {
     if (!business?.id || !business?.subscriptionId) return;
     setUpdatingPlan(true);
@@ -297,7 +316,7 @@ export default function DashboardPage() {
     
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {['name', 'phone', 'email', 'address', 'city', 'state', 'website'].map((field) => (
+            {['name', 'phone', 'email', 'address', 'city', 'state', 'website', 'Facebook', 'Twitter', 'Instagram'].map((field) => (
               <div key={field}>
                 <label className="block text-sm font-medium text-gray-700 capitalize mb-1">{field}</label>
                 <input
@@ -309,6 +328,17 @@ export default function DashboardPage() {
                 />
               </div>
             ))}
+          </div>
+          {/* Service Areas */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Service Areas</label>
+            <textarea
+              name="serviceArea"
+              value={formState.serviceArea}
+              onChange={handleChange}
+              rows={4}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 text-black focus:ring-[#4C7C59]"
+            />
           </div>
           {/* Description */}
           <div>
@@ -322,55 +352,55 @@ export default function DashboardPage() {
             />
           </div>
 
-          <div className="border rounded-lg p-4 bg-gray-50">
-      <h3 className="text-lg font-semibold text-[#2C3E50] mb-4 text-center">
-        Business Hours
-      </h3>
+      <div className="border rounded-lg p-4 bg-gray-50">
+  <h3 className="text-lg font-semibold text-[#2C3E50] mb-4 text-center">
+    Business Hours
+  </h3>
 
-      <div className="space-y-2 mb-4">
-        <p className="text-sm text-[#2C3E50] font-medium">
-          Select the days your business is open:
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-          {daysOfWeek.map((day) => (
-            <label
-              key={day}
-              className="flex items-center space-x-2 text-[#2C3E50]"
-            >
-              <input
-                type="checkbox"
-                checked={daysOpen.includes(day)}
-                onChange={() => handleDayToggle(day)}
-              />
-              <span>{day}</span>
-            </label>
-          ))}
+  <div className="space-y-2 mb-4">
+    <p className="text-sm text-[#2C3E50] font-medium">
+      Select the days your business is open:
+    </p>
+    
+  </div>
+
+  <div className="space-y-4">
+    {daysOpen.map((day) => (
+      <div
+        key={day}
+        className="flex flex-col md:flex-row md:items-center gap-4"
+      >
+        <span className="w-full md:w-1/4 font-medium text-[#2C3E50]">
+          {day}
+        </span>
+        <div className="flex gap-2 w-full md:w-3/4">
+          <label className="flex flex-col text-sm text-[#2C3E50] w-1/2">
+            Open
+            <input
+              type="time"
+              value={form.hours[day]?.open || ''}
+              onChange={(e) =>
+                handleHoursChange(day, 'open', e.target.value)
+              }
+              className="border border-gray-300 rounded-md px-2 py-1 text-black"
+            />
+          </label>
+          <label className="flex flex-col text-sm text-[#2C3E50] w-1/2">
+            Close
+            <input
+              type="time"
+              value={form.hours[day]?.close || ''}
+              onChange={(e) =>
+                handleHoursChange(day, 'close', e.target.value)
+              }
+              className="border border-gray-300 rounded-md px-2 py-1 text-black"
+            />
+          </label>
         </div>
       </div>
-
-      <div className="space-y-2">
-        {daysOpen.map((day) => (
-          <div key={day} className="flex items-center justify-between gap-4">
-            <span className="w-1/4 font-medium text-[#2C3E50]">{day}</span>
-            <input
-              type="time"
-              value={form.hours[day]?.open || ""}
-              onChange={(e) => handleHoursChange(day, "open", e.target.value)}
-              className="w-full border rounded px-2 py-1 text-[#2C3E50]"
-              required
-            />
-            <span className="text-sm text-[#2C3E50]">to</span>
-            <input
-              type="time"
-              value={form.hours[day]?.close || ""}
-              onChange={(e) => handleHoursChange(day, "close", e.target.value)}
-              className="w-full border rounded px-2 py-1 text-[#2C3E50]"
-              required
-            />
-          </div>
-        ))}
-      </div>
-    </div>
+    ))}
+  </div>
+</div>
           {/* Category */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>

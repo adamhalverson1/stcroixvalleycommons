@@ -15,6 +15,10 @@ export default function RegisterBusinessPage() {
     city: '',
     state: '',
     website: '',
+    Facebook: '',
+    Twitter: '',
+    Instagram: '',
+    serviceArea: '',
     category: '',
     description: '',
     hours: daysOfWeek.reduce((acc, day) => {
@@ -86,7 +90,7 @@ export default function RegisterBusinessPage() {
       <textarea
         className="w-full border rounded px-4 py-2 text-[#2C3E50]"
         name="ServiceArea"
-        onChange={(e) => setForm({ ...form, description: e.target.value })}
+        onChange={(e) => setForm({ ...form, serviceArea: e.target.value })}
         placeholder="Areas Served by Your Business"
         rows={2}
       />

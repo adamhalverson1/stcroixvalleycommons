@@ -96,11 +96,23 @@ export default function BusinessDetailPage() {
           {business.phone && (
             <Detail label="Phone" value={business.phone} />
           )}
+          {business.serviceArea && (
+            <Detail label="Service Area" value={business.serviceArea} />
+          )}
           {business.email && (
             <Detail label="Email" value={<a href={`mailto:${business.email}`} className="text-blue-600 hover:underline">{business.email}</a>} />
           )}
           {business.website && (
             <Detail label="Website" value={<a href={business.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{business.website}</a>} />
+          )}
+          {business.Facebook && (
+            <Detail label="Facebook" value={<a href={business.Facebook} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{business.Facebook}</a>} />
+          )}
+          {business.Twitter && (
+            <Detail label="Twitter" value={<a href={business.Twitter} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{business.Twitter}</a>} />
+          )}
+          {business.Instagram && (
+            <Detail label="Instagram" value={<a href={business.Instagram} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{business.Instagram}</a>} />
           )}
         </div>
 
