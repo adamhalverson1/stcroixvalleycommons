@@ -8,6 +8,7 @@ import { BusinessForm } from '@/components/dashboard/BusinessForm';
 import { BusinessImage } from '@/components/dashboard/BusinessImage';
 import { BusinessHours } from '@/components/dashboard/BusinessHours';
 import { SubscriptionManager } from '@/components/dashboard/SubscriptionManager';
+import { BusinessAttachments } from '@/components/dashboard/BusinessAttachments';
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -53,8 +54,10 @@ export default function DashboardPage() {
       <div className="space-y-6">
         <BusinessForm business={business} setBusiness={setBusiness} />
         <BusinessImage business={business} setBusiness={setBusiness} />
+        <BusinessAttachments business={business} setBusiness={setBusiness} />
         <BusinessHours business={business} setBusiness={setBusiness} />
         <SubscriptionManager business={business} setBusiness={setBusiness} />
+
       </div>
     </div>
   );

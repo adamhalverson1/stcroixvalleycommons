@@ -81,9 +81,25 @@ export default function BusinessDetailPage() {
 
         {/* Details */}
         <div className="mt-8 grid sm:grid-cols-2 gap-4 text-gray-700 text-sm">
-          {business.category && (
+          {Array.isArray(business.categories) && business.categories.length > 0 ? (
+            <Detail
+              label="Categories"
+              value={
+                <ul className="flex flex-wrap gap-2 mt-1">
+                  {business.categories.map((cat: string, index: number) => (
+                    <li
+                      key={index}
+                      className="bg-[#4C7C59] text-white text-xs font-semibold px-3 py-1 rounded-full"
+                    >
+                      {cat}
+                    </li>
+                  ))}
+                </ul>
+              }
+            />
+          ) : business.category ? (
             <Detail label="Category" value={business.category} />
-          )}
+          ) : null}
           {business.address && (
             <Detail label="Address" value={business.address} />
           )}
@@ -131,6 +147,30 @@ export default function BusinessDetailPage() {
                   </span>
                 </li>
               ))}
+            </ul>
+          </div>
+        )}
+        {business.plan === 'featured' &&
+          business.attachments &&
+          business.attachments.length > 0 && (
+          <div className="mt-10">
+            <h2 className="text-xl font-semibold text-[#4C7C59] mb-4">Attachments</h2>
+            <ul className="space-y-2 text-sm text-blue-600">
+              {business.attachments.map((url, index) => {
+                const fileName = decodeURIComponent(url.split('/').pop()!.split('?')[0]);
+                return (
+                  <li key={index}>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline"
+                    >
+                      {fileName}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}

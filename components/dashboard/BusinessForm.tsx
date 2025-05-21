@@ -1,7 +1,8 @@
 'use client';
+
 import { useState } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase'; // Adjust the import to your project structure
+import { db } from '@/lib/firebase';
 
 interface Business {
   id: string;
@@ -16,6 +17,8 @@ interface Business {
   Instagram: string;
   email: string;
   serviceArea: string;
+  plan?: string; // "basic" or "featured"
+  categories?: string[];
   [key: string]: any;
 }
 
@@ -37,11 +40,26 @@ export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
     Facebook: business.Facebook || '',
     Twitter: business.Twitter || '',
     Instagram: business.Instagram || '',
-
   });
 
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(business.categories || []);
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+
+  const categoryOptions = [
+    'Retail',
+    'Food & Beverage',
+    'Health & Wellness',
+    'Home Services',
+    'Professional Services',
+    'Arts & Entertainment',
+    'Automotive',
+    'Education',
+    'Technology',
+    'Other',
+  ];
+
+  const maxCategories = business.plan === 'featured' ? 3 : 1;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -52,8 +70,13 @@ export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
     setSaving(true);
     try {
       const businessRef = doc(db, 'businesses', business.id);
-      await updateDoc(businessRef, formData);
-      setBusiness({ ...business, ...formData });
+      const updateData: any = {
+        ...formData,
+        categories: selectedCategories,
+      };
+
+      await updateDoc(businessRef, updateData);
+      setBusiness({ ...business, ...formData, categories: selectedCategories });
       setSuccessMessage('Business information updated successfully.');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
@@ -63,123 +86,81 @@ export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
     }
   };
 
+  const handleCategoryChange = (category: string, checked: boolean) => {
+    if (checked) {
+      if (selectedCategories.length < maxCategories) {
+        setSelectedCategories([...selectedCategories, category]);
+      }
+    } else {
+      setSelectedCategories(selectedCategories.filter((c) => c !== category));
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-md">
       <h2 className="text-2xl font-semibold mb-4 text-[#4C7C59]">Business Info</h2>
-      
+
       <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Business Name</label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className="w-full mt-1 p-2 border text-black border-gray-300 rounded-lg"
-            required
-          />
-        </div>
+        {/* Repeat this block for all fields */}
+        {[
+          { label: 'Business Name', name: 'name' },
+          { label: 'Description', name: 'description', type: 'textarea' },
+          { label: 'Phone Number', name: 'phone' },
+          { label: 'Email', name: 'email' },
+          { label: 'Address', name: 'address' },
+          { label: 'State', name: 'state' },
+          { label: 'Service Area', name: 'serviceArea' },
+          { label: 'Website', name: 'website' },
+          { label: 'Facebook', name: 'Facebook' },
+          { label: 'Twitter', name: 'Twitter' },
+          { label: 'Instagram', name: 'Instagram' },
+        ].map(({ label, name, type }) => (
+          <div key={name}>
+            <label className="block text-sm font-medium text-gray-700">{label}</label>
+            {type === 'textarea' ? (
+              <textarea
+                name={name}
+                value={(formData as any)[name]}
+                onChange={handleChange}
+                rows={3}
+                className="w-full text-black mt-1 p-2 border border-gray-300 rounded-lg"
+              />
+            ) : (
+              <input
+                type="text"
+                name={name}
+                value={(formData as any)[name]}
+                onChange={handleChange}
+                className="w-full text-black mt-1 p-2 border border-gray-300 rounded-lg"
+              />
+            )}
+          </div>
+        ))}
 
+        {/* Category Selector (shown for both plans) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Description</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows={3}
-            className="w-full text-black mt-1 p-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-          <input
-            type="tel"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            className="w-full text-black mt-1 p-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
-          <input
-            type="text"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full mt-1 text-black p-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Address</label>
-          <input
-            type="text"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            className="w-full text-black mt-1 p-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">State</label>
-          <input
-            type="text"
-            name="state"
-            value={formData.state}
-            onChange={handleChange}
-            className="w-full mt-1 text-black p-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Service Area</label>
-          <input
-            type="text"
-            name="serviceArea"
-            value={formData.serviceArea}
-            onChange={handleChange}
-            className="w-full text-black mt-1 p-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Website</label>
-          <input
-            type="text"
-            name="website"
-            value={formData.website}
-            onChange={handleChange}
-            className="w-full text-black mt-1 p-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Facebook</label>
-          <input
-            type="text"
-            name="Facebook"
-            value={formData.Facebook}
-            onChange={handleChange}
-            className="w-full mt-1 text-black p-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Twitter</label>
-          <input
-            type="text"
-            name="Twitter"
-            value={formData.Twitter}
-            onChange={handleChange}
-            className="w-full mt-1 text-black p-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Instagram</label>
-          <input
-            type="text"
-            name="Instagram"
-            value={formData.Instagram}
-            onChange={handleChange}
-            className="w-full mt-1 text-black p-2 border border-gray-300 rounded-lg"
-          />
+          <label className="block text-sm font-medium text-gray-700">
+            Business Categories ({selectedCategories.length}/{maxCategories})
+          </label>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            {categoryOptions.map((category) => (
+              <label key={category} className="flex items-center space-x-2 text-sm text-gray-800">
+                <input
+                  type="checkbox"
+                  value={category}
+                  checked={selectedCategories.includes(category)}
+                  onChange={(e) =>
+                    handleCategoryChange(category, e.target.checked)
+                  }
+                  disabled={
+                    !selectedCategories.includes(category) &&
+                    selectedCategories.length >= maxCategories
+                  }
+                />
+                <span>{category}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
         <button
