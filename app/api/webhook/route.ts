@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     try {
       const subscriptionId = session.subscription as string;
-      const { data: subscription } = await stripe.subscriptions.retrieve(subscriptionId);
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
       const currentPeriodEndTimestamp = subscription.current_period_end
         ? Timestamp.fromDate(new Date(subscription.current_period_end * 1000))
