@@ -21,10 +21,24 @@ export default function BusinessCard({ business }: BusinessCardProps) {
         <img
           src={business.image || '/placeholder.png'}
           alt={business.name}
-          className="object-cover w-sm h-sm rounded-md mb-4"
+          className="object-cover w-full h-40 rounded-md mb-4"
         />
         <h3 className="text-lg font-semibold text-[#7DA195]">{business.name}</h3>
-        <p className="text-sm text-gray-600"><strong>{business.category}</strong></p>
+
+        {/* Display each category as a tag */}
+        {Array.isArray(business.categories) && business.categories.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2 mt-2 mb-2">
+            {business.categories.map((category) => (
+              <span
+                key={category}
+                className="bg-[#7DA195] text-white text-xs font-medium px-2 py-1 rounded-full"
+              >
+                {category}
+              </span>
+            ))}
+          </div>
+        )}
+
         <p className="text-sm text-gray-600">{business.address}</p>
         <p className="text-sm text-gray-600">{business.city}</p>
         <p className="text-sm text-gray-600">{business.state}</p>

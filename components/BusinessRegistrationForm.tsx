@@ -19,7 +19,7 @@ export default function RegisterBusinessPage() {
     Twitter: '',
     Instagram: '',
     serviceArea: '',
-    category: '',
+    categories: '',
     description: '',
     hours: daysOfWeek.reduce((acc, day) => {
       acc[day] = { open: '', close: '' };
@@ -101,8 +101,8 @@ export default function RegisterBusinessPage() {
       <input className="w-full border rounded px-4 py-2 text-[#2C3E50]" name="website" onChange={handleChange} placeholder="Website"/>
 
       <select
-        name="category"
-        value={form.category}
+        name="categories"
+        value={form.categories}
         onChange={handleChange}
         required
         className="w-full border rounded px-4 py-2 text-[#2C3E50]"

@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
@@ -6,8 +7,8 @@ import { db } from '../../lib/firebase';
 import BusinessCard from '../../components/businessCard';
 import { Business } from '../../types/business';
 import SearchBar from '@/components/searchBar';
-import CityList from '@/components/CityFilter'; // Updated component: click-to-filter
-import CategoryList from '@/components/CategoryFilter'; // Updated component: click-to-filter
+import CityList from '@/components/CityFilter';
+import CategoryList from '@/components/CategoryFilter';
 
 const ITEMS_PER_PAGE = 15;
 
@@ -35,10 +36,7 @@ export default function BusinessDirectory() {
           };
         }) as Business[];
 
-        const sorted = activeBusinesses.sort((a, b) =>
-          a.name.localeCompare(b.name)
-        );
-
+        const sorted = activeBusinesses.sort((a, b) => a.name.localeCompare(b.name));
         setBusinesses(sorted);
       } catch (error) {
         console.error('Error fetching businesses:', error);
@@ -50,11 +48,14 @@ export default function BusinessDirectory() {
     fetchBusinesses();
   }, []);
 
-  // 🔍 Apply filters before pagination
+  // Filter businesses based on search, city, and category
   const filteredBusinesses = businesses.filter((biz) => {
     const matchesSearch = biz.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCity = selectedCity ? biz.city === selectedCity : true;
-    const matchesCategory = selectedCategory ? biz.category === selectedCategory : true;
+    const matchesCategory = selectedCategory
+      ? Array.isArray(biz.categories) && biz.categories.includes(selectedCategory)
+      : true;
+
     return matchesSearch && matchesCity && matchesCategory;
   });
 
@@ -69,17 +70,22 @@ export default function BusinessDirectory() {
       </h1>
 
       <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+
       <div className="my-4">
         <CityList selectedCity={selectedCity} onCityChange={setSelectedCity} />
         <CategoryList selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
       </div>
 
       {loading ? (
-        <p className="min-h-screen bg-gray-100 p-6 mt-8 text-center text-[#7DA195]">Loading businesses...</p>
+        <p className="min-h-screen bg-gray-100 p-6 mt-8 text-center text-[#7DA195]">
+          Loading businesses...
+        </p>
       ) : (
         <>
           {filteredBusinesses.length === 0 ? (
-            <p className="text-center text-gray-600 mt-10">No businesses match your filters.</p>
+            <p className="text-center text-gray-600 mt-10">
+              No businesses match your filters.
+            </p>
           ) : (
             <>
               <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

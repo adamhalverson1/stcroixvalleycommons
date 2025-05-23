@@ -47,15 +47,18 @@ export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
   const [successMessage, setSuccessMessage] = useState('');
 
   const categoryOptions = [
-    'Retail',
+    'Retail & Consumer Goods',
     'Food & Beverage',
     'Health & Wellness',
     'Home Services',
     'Professional Services',
-    'Arts & Entertainment',
+    'Arts, Entertainment & Recreation',
     'Automotive',
-    'Education',
-    'Technology',
+    'Education & Training',
+    'Technology & IT',
+    'Finance & Insurance',
+    'Logistics & Transportation',
+    'Pets & Animals',
     'Other',
   ];
 
