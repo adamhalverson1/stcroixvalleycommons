@@ -54,7 +54,7 @@ export function BusinessAttachments({ business, setBusiness }: BusinessAttachmen
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md mt-6">
+    <div className="bg-white p-6 rounded-xl mt-6">
       <h2 className="text-2xl font-semibold mb-4 text-[#4C7C59]">Business Attachments</h2>
 
       <ul className="mb-4 space-y-2">

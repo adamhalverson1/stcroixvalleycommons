@@ -100,7 +100,7 @@ export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-md">
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl">
       <h2 className="text-2xl font-semibold mb-4 text-[#4C7C59]">Business Info</h2>
 
       <div className="space-y-4">

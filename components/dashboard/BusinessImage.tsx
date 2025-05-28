@@ -41,7 +41,7 @@ export function BusinessImage({ business, setBusiness }: BusinessImageProps) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md">
+    <div className="bg-white p-6 rounded-xl">
       <h2 className="text-2xl font-semibold mb-4 text-[#4C7C59]">Business Image</h2>
 
       {business.imageUrl ? (

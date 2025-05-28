@@ -142,7 +142,7 @@ export default function PostCouponForm({ businessId, plan }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-white rounded shadow-md max-w-lg mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-white rounded max-w-lg mx-auto">
       <h2 className="text-xl font-semibold text-[#4C7C59]">Post a Coupon</h2>
 
       {loading ? (

@@ -50,7 +50,7 @@ export function BusinessHours({ business, setBusiness }) {
   };
 
   return (
-    <div className="border rounded-lg p-4 bg-white">
+    <div className=" rounded-lg p-4 bg-white">
       <h3 className="text-lg font-semibold text-[#2C3E50] mb-4 text-center">Business Hours</h3>
 
       <div className="space-y-2">

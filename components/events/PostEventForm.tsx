@@ -131,7 +131,7 @@ export default function PostEventForm({ businessId, plan }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-white rounded shadow-md">
+    <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-white rounded">
       <h2 className="text-xl font-semibold text-[#4C7C59]">Post an Event</h2>
 
       {loading ? (

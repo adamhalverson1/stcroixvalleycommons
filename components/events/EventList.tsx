@@ -40,10 +40,10 @@ export default function EventList({ businessId }: Props) {
         <div key={event.id} className="border rounded p-4 shadow-sm bg-white">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="text-lg font-bold">{event.title}</h3>
-              <p>{event.description}</p>
-              <p className="text-sm text-gray-500">{event.date} at {event.time}</p>
-              <p className="text-sm text-gray-500">{event.location}</p>
+              <h3 className="text-lg text-[#4C7C59] font-bold">{event.title}</h3>
+              <p className='text-md text-black'>{event.description}</p>
+              <p className="text-sm text-black">{event.date} at {event.time}</p>
+              <p className="text-sm text-black">{event.location}</p>
               {event.isFeatured && (
                 <span className="text-sm text-yellow-600 font-semibold">★ Featured Event</span>
               )}

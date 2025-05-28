@@ -147,7 +147,7 @@ return (
     <h1 className="text-3xl font-bold text-[#4C7C59] text-center mb-6">
       Manage Subscription
     </h1>
-    <div className="bg-white shadow-md rounded-xl p-6 max-w-xl mx-auto">
+    <div className="bg-white border-2 rounded-xl p-6 max-w-xl mx-auto">
       {business ? (
         <>
           <p className="text-gray-600 mb-2">
