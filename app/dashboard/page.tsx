@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -14,20 +14,23 @@ import EventList from '@/components/events/EventList';
 import PostCouponForm from '@/components/coupons/PostCouponForm';
 import CouponList from '@/components/coupons/CouponList';
 
+const TABS = ['Business Info', 'Events', 'Coupons', 'Subscription'];
+
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [business, setBusiness] = useState(null);
+  const [activeTab, setActiveTab] = useState('Business Info');
 
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          // Query business by ownerId (user.uid)
-          const businessesRef = collection(db, 'businesses');
-          const q = query(businessesRef, where('userId', '==', user.uid));
+          const q = query(
+            collection(db, 'businesses'),
+            where('userId', '==', user.uid)
+          );
           const querySnapshot = await getDocs(q);
-
           if (!querySnapshot.empty) {
             const docSnap = querySnapshot.docs[0];
             setBusiness({ id: docSnap.id, ...docSnap.data() });
@@ -49,23 +52,70 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
-  if (!business) return <p>No Business Found</p>;
+  if (loading) return <p className="text-center py-10">Loading...</p>;
+  if (!business) return <p className="text-center py-10 text-red-600">No Business Found</p>;
 
   return (
-    <div className="bg-gray-100 min-h-screen px-6">
-      <h1 className="text-3xl font-bold text-[#4C7C59] text-center">Business Dashboard</h1>
-      <div className="space-y-6">
-        <BusinessForm business={business} setBusiness={setBusiness} />
-        <BusinessImage business={business} setBusiness={setBusiness} />
-        <BusinessAttachments business={business} setBusiness={setBusiness} />
-        <BusinessHours business={business} setBusiness={setBusiness} />
-        <PostEventForm businessId={business.id} plan={business.plan} />
-        <EventList businessId={business.id} />
-        <PostCouponForm businessId={business.id} plan={business.plan}/>
-        <CouponList businessId={business.id}/>
+    <div className="bg-gray-50 min-h-screen px-4 sm:px-6 py-10">
+      <h1 className="text-3xl font-bold text-center text-[#4C7C59] mb-8">Business Dashboard</h1>
+
+      {/* Tab Navigation */}
+      <div className="flex justify-center mb-6">
+        <div className="inline-flex rounded-lg border border-gray-300 bg-white shadow-sm overflow-hidden">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              className={`px-4 py-2 text-sm font-medium ${
+                activeTab === tab
+                  ? 'bg-[#4C7C59] text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
-        <SubscriptionManager business={business} setBusiness={setBusiness} />
+
+      {/* Tab Content */}
+      <div className="bg-white shadow-sm rounded-xl p-4 sm:p-6 border border-gray-200">
+        {activeTab === 'Business Info' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-6">
+              <BusinessForm business={business} setBusiness={setBusiness} />              
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-6">
+              <BusinessImage business={business} setBusiness={setBusiness} />
+              <BusinessAttachments business={business} setBusiness={setBusiness} />
+              <BusinessHours business={business} setBusiness={setBusiness} />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'Events' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <PostEventForm businessId={business.id} plan={business.plan} />
+            <EventList businessId={business.id} />
+          </div>
+        )}
+
+        {activeTab === 'Coupons' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <PostCouponForm businessId={business.id} plan={business.plan} />
+            <CouponList businessId={business.id} />
+          </div>
+        )}
+
+        {activeTab === 'Subscription' && (
+          <div className="space-y-6">
+            <SubscriptionManager business={business} setBusiness={setBusiness} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

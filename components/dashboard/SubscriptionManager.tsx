@@ -143,7 +143,7 @@ if (loading) {
 }
 
 return (
-  <div className="bg-gray-100 min-h-screen px-6 py-10">
+  <div>
     <h1 className="text-3xl font-bold text-[#4C7C59] text-center mb-6">
       Manage Subscription
     </h1>
