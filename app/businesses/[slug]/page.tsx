@@ -2,20 +2,46 @@
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Business } from '@/types/business';
+import CouponCard from '@/components/coupons/CouponCard'; // Assuming you want to reuse this component
+
+interface Event {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  imageUrl?: string;
+  isFeatured: boolean;
+  slug: string;
+}
+
+interface Coupon {
+  id: string;
+  title: string;
+  description: string;
+  expirationDate: string;
+  imageUrl?: string;
+  isFeatured: boolean;
+  businessId: string;
+  slug: string;
+}
 
 export default function BusinessDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
 
   const [business, setBusiness] = useState<Business | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchBusiness = async () => {
+    const fetchBusinessEventAndCoupons = async () => {
       try {
+        // Fetch business data
         const docRef = doc(db, 'businesses', slug);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
@@ -28,15 +54,43 @@ export default function BusinessDetailPage() {
         } else {
           setBusiness(null);
         }
+
+        // Fetch event(s) for this business
+        const eventsQuery = query(
+          collection(db, 'events'),
+          where('businessId', '==', slug)
+        );
+        const eventsSnap = await getDocs(eventsQuery);
+        if (!eventsSnap.empty) {
+          const firstEvent = eventsSnap.docs[0].data() as Event;
+          firstEvent.id = eventsSnap.docs[0].id;
+          setEvent(firstEvent);
+        } else {
+          setEvent(null);
+        }
+
+        // Fetch coupons for this business
+        const couponsQuery = query(
+          collection(db, 'coupons'),
+          where('businessId', '==', slug)
+        );
+        const couponsSnap = await getDocs(couponsQuery);
+        const couponsData = couponsSnap.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Coupon[];
+        setCoupons(couponsData);
       } catch (error) {
-        console.error('Error fetching business:', error);
+        console.error('Error fetching business, events, or coupons:', error);
         setBusiness(null);
+        setEvent(null);
+        setCoupons([]);
       } finally {
         setLoading(false);
       }
     };
 
-    if (slug) fetchBusiness();
+    if (slug) fetchBusinessEventAndCoupons();
   }, [slug]);
 
   if (loading) {
@@ -174,10 +228,57 @@ export default function BusinessDetailPage() {
             </ul>
           </div>
         )}
+         {event && (
+          <div className="mt-10 border rounded-lg p-6 bg-[#E7F3E7] shadow-md">
+            <h2 className="text-2xl font-semibold text-[#4C7C59] mb-4">Upcoming Event</h2>
+            {event.imageUrl && (
+              <img
+                src={event.imageUrl}
+                alt={event.title}
+                className="w-full max-w-xl rounded-md object-cover mb-4"
+              />
+            )}
+            <h3 className="text-xl font-bold text-[#4C7C59]">{event.title}</h3>
+            {event.isFeatured && (
+              <p className="text-yellow-700 font-semibold mb-2">🌟 Featured Event</p>
+            )}
+            <p className="text-gray-700 mb-1">
+              <strong>Date:</strong> {event.date}
+            </p>
+            <p className="text-gray-700 mb-1">
+              <strong>Time:</strong> {event.time}
+            </p>
+            <p className="text-gray-700 mb-1">
+              <strong>Location:</strong> {event.location}
+            </p>
+            <a
+              href={`/events/${event.slug}`}
+              className="inline-block mt-4 px-4 py-2 bg-[#4C7C59] text-white rounded hover:bg-[#3c5a41]"
+            >
+              View Event Details
+            </a>
+          </div>
+        )}
+        {/* Coupons Section */}
+        {coupons.length > 0 && (
+          <div className="mt-10">
+            <h2 className="text-xl font-semibold text-[#4C7C59] mb-4">Coupons</h2>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {coupons.map(coupon => (
+                <CouponCard key={coupon.id} coupon={coupon} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {coupons.length === 0 && (
+          <p className="text-center text-gray-500 mt-10">No coupons available.</p>
+        )}
       </div>
     </div>
   );
 }
+
 
 function Detail({ label, value }: { label: string; value: React.ReactNode }) {
   return (

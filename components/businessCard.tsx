@@ -21,7 +21,7 @@ export default function BusinessCard({ business }: BusinessCardProps) {
         <img
           src={business.image || '/placeholder.png'}
           alt={business.name}
-          className="object-cover w-full h-40 rounded-md mb-4"
+          className="object-cover h-sm w-sm rounded-md mb-4"
         />
         <h3 className="text-lg font-semibold text-[#7DA195]">{business.name}</h3>
 

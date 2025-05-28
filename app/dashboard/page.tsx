@@ -9,6 +9,10 @@ import { BusinessImage } from '@/components/dashboard/BusinessImage';
 import { BusinessHours } from '@/components/dashboard/BusinessHours';
 import { SubscriptionManager } from '@/components/dashboard/SubscriptionManager';
 import { BusinessAttachments } from '@/components/dashboard/BusinessAttachments';
+import PostEventForm from '@/components/events/PostEventForm';
+import EventList from '@/components/events/EventList';
+import PostCouponForm from '@/components/coupons/PostCouponForm';
+import CouponList from '@/components/coupons/CouponList';
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -56,9 +60,12 @@ export default function DashboardPage() {
         <BusinessImage business={business} setBusiness={setBusiness} />
         <BusinessAttachments business={business} setBusiness={setBusiness} />
         <BusinessHours business={business} setBusiness={setBusiness} />
-        <SubscriptionManager business={business} setBusiness={setBusiness} />
-
+        <PostEventForm businessId={business.id} plan={business.plan} />
+        <EventList businessId={business.id} />
+        <PostCouponForm businessId={business.id} plan={business.plan}/>
+        <CouponList businessId={business.id}/>
       </div>
+        <SubscriptionManager business={business} setBusiness={setBusiness} />
     </div>
   );
 }
