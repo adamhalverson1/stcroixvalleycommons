@@ -63,11 +63,13 @@ export async function POST(req: NextRequest) {
 
     try {
       const subscriptionId = session.subscription as string;
-      // Explicitly cast subscription to Stripe.Subscription to fix TS error
-      const subscription = (await stripe.subscriptions.retrieve(subscriptionId)) as Stripe.Subscription;
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
-      const currentPeriodEndTimestamp = subscription.current_period_end
-        ? Timestamp.fromDate(new Date(subscription.current_period_end * 1000))
+      // Access current_period_end with 'as any' to avoid TS error
+      const currentPeriodEndRaw = (subscription as any)['current_period_end'];
+
+      const currentPeriodEndTimestamp = currentPeriodEndRaw
+        ? Timestamp.fromDate(new Date(currentPeriodEndRaw * 1000))
         : null;
 
       await db.collection('businesses').doc(businessId).set(
