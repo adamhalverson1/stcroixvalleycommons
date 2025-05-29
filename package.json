@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "engines": {
+  "node": ">=18.18.0"
+},
   "dependencies": {
     "@clerk/nextjs": "^6.14.2",
     "@stripe/stripe-js": "^7.0.0",
