@@ -16,10 +16,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <Navbar />
-      <body className="bg-white">{children}
-
-      <Footer />
+      <body className="bg-white">
+        <Navbar /> {/* ✅ Now it's valid */}
+        {children}
+        <Footer />
       </body>
     </html>
   );
