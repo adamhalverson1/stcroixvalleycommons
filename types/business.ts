@@ -15,6 +15,7 @@ export interface Business {
     Instagram: string;
     Twitter: string;
     hours: string;
+    website: string;
     attachments?: string[] | Attachment[];
   }
   
