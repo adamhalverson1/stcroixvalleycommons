@@ -36,6 +36,8 @@ const emptyBusiness: Business = {
   category: [],
   image: '',
   imageUrl: '',
+  subscriptionId: '', 
+  subscriptionStatus: '',
   attachments: [], // assuming this is part of the type
   hours: {},
   slug: '',       // assuming business hours are stored in an object
