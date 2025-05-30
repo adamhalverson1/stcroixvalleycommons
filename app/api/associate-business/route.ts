@@ -1,6 +1,6 @@
 // app/api/associate-business/route.ts
 
-export const runtime = 'node';    // ← Node.js runtime (not 'edge')
+export const runtime = 'edge';  
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';

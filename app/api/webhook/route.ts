@@ -5,7 +5,7 @@ import Stripe from 'stripe';
 import { db } from '@/lib/firebase-admin'; // <- Node-only import
 import { Timestamp } from 'firebase-admin/firestore';
 
-export const runtime = 'node';
+export const runtime = 'edge';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-03-31.basil',
