@@ -1,15 +1,16 @@
 export interface BusinessHours {
-  Sunday?: string;
-  Monday?: string;
-  Tuesday?: string;
-  Wednesday?: string;
-  Thursday?: string;
-  Friday?: string;
-  Saturday?: string;
+  Sunday?: { open: string; close: string };
+  Monday?: { open: string; close: string };
+  Tuesday?: { open: string; close: string };
+  Wednesday?: { open: string; close: string };
+  Thursday?: { open: string; close: string };
+  Friday?: { open: string; close: string };
+  Saturday?: { open: string; close: string };
 }
 
 export interface Business {
   id: string;
+  plan:string;
   name: string;
   description: string;
   categories: string;

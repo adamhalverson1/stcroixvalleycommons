@@ -234,33 +234,34 @@ export default function BusinessDetailPage() {
           </div>
         </div>
 
-        {/* Business Hours */}
-        {business.hours && typeof business.hours === 'object' && (
-          <div className="bg-white rounded-2xl shadow-md p-6">
-            <h2 className="text-xl font-semibold text-[#4C7C59] mb-4">Business Hours</h2>
-            <ul className="divide-y divide-gray-200 text-sm text-[#4C7C59]">
-              {[
-                'Sunday',
-                'Monday',
-                'Tuesday',
-                'Wednesday',
-                'Thursday',
-                'Friday',
-                'Saturday',
-              ].map((day) => {
-                const time = business.hours[day];
-                return (
-                  <li key={day} className="flex justify-between py-2">
-                    <span className="font-medium">{day}</span>
-                    <span>
-                      {time?.open && time?.close ? `${time.open} - ${time.close}` : 'Closed'}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
+          {business.hours && typeof business.hours === 'object' && (
+            <div className="bg-white rounded-2xl shadow-md p-6">
+              <h2 className="text-xl font-semibold text-[#4C7C59] mb-4">Business Hours</h2>
+
+              <ul className="divide-y divide-gray-200 text-sm text-[#4C7C59]">
+                {([
+                  'Sunday',
+                  'Monday',
+                  'Tuesday',
+                  'Wednesday',
+                  'Thursday',
+                  'Friday',
+                  'Saturday',
+                ] as const).map((day) => {
+                  const time = business.hours[day];
+
+                  return (
+                    <li key={day} className="flex justify-between py-2">
+                      <span className="font-medium">{day}</span>
+                      <span>
+                        {time?.open && time?.close ? `${time.open} - ${time.close}` : 'Closed'}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
 
         {/* Attachments */}
         {business.plan === 'featured' &&
