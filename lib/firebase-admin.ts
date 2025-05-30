@@ -12,5 +12,4 @@ if (!getApps().length) {
   });
 }
 
-const adminDb = getFirestore();
-export { adminDb };
+export const db = getFirestore();
