@@ -11,13 +11,14 @@ interface SearchBarProps {
   setSearchQuery: (query: string) => void;
 }
 
+
 export default function SearchBar({ searchQuery, setSearchQuery }: SearchBarProps) {
   const [query, setQuery] = useState(searchQuery);
   const [results, setResults] = useState<Business[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async () => {
-    if (!query.trim()) return;
+  if (!query.trim()) return;
 
     setLoading(true);
     try {
@@ -31,9 +32,9 @@ export default function SearchBar({ searchQuery, setSearchQuery }: SearchBarProp
         const data = docSnap.data() as Business;
         const matches =
           data.name?.toLowerCase().includes(lowerQuery) ||
-          data.category?.toLowerCase().includes(lowerQuery) ||
+          (Array.isArray(data.category) &&
+            data.category.some(cat => cat.toLowerCase().includes(lowerQuery))) ||
           data.description?.toLowerCase().includes(lowerQuery);
-
         if (matches) {
           filtered.push({ ...data, id: docSnap.id });
         }
@@ -46,7 +47,6 @@ export default function SearchBar({ searchQuery, setSearchQuery }: SearchBarProp
       setLoading(false);
     }
   };
-
   return (
     <div className="flex flex-col gap-4 items-center w-full max-w-3xl mx-auto">
       <div className="flex items-center gap-4 w-full">
