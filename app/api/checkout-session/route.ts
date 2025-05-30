@@ -5,6 +5,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-03-31.basil',
 });
 
+export const runtime = 'nodejs';
+
 export async function POST(req: NextRequest) {
   const { businessId, priceId, plan } = await req.json();
 
