@@ -37,6 +37,7 @@ export interface Business {
 export interface Attachment {
   url: string;
   type?: string;
+  name?: string;
 }
 
 export interface Events {
