@@ -10,6 +10,11 @@ export interface Business {
     state: string;
     phone: string;
     serviceArea: string;
+    email: string;
+    Facebook: string;
+    Instagram: string;
+    Twitter: string;
+    hours: string;
     attachments?: string[] | Attachment[];
   }
   
