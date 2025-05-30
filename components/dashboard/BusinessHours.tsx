@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { Business } from '@/types/business';
 
 const daysOfWeek = [
   'Sunday',
@@ -12,25 +13,39 @@ const daysOfWeek = [
   'Thursday',
   'Friday',
   'Saturday',
-];
+] as const;
 
-export function BusinessHours({ business, setBusiness }) {
-  const [hours, setHours] = useState({});
+type Day = typeof daysOfWeek[number];
+type TimeType = 'open' | 'close';
+
+type BusinessHour = {
+  open: string;
+  close: string;
+};
+
+type HoursMap = Record<Day, BusinessHour>;
+
+interface BusinessHoursProps {
+  business: Business;
+  setBusiness: React.Dispatch<React.SetStateAction<Business>>;
+}
+
+export function BusinessHours({ business, setBusiness }: BusinessHoursProps) {
+  const [hours, setHours] = useState<HoursMap>(() => {
+    const initial: Partial<HoursMap> = {};
+    daysOfWeek.forEach((day) => {
+      initial[day] = { open: '', close: '' };
+    });
+    return initial as HoursMap;
+  });
 
   useEffect(() => {
     if (business?.hours) {
-      setHours(business.hours);
-    } else {
-      // Initialize hours for all days if missing
-      const initialHours = {};
-      daysOfWeek.forEach((day) => {
-        initialHours[day] = { open: '', close: '' };
-      });
-      setHours(initialHours);
+      setHours(business.hours as HoursMap);
     }
   }, [business]);
 
-  const handleHoursChange = (day, type, value) => {
+  const handleHoursChange = (day: Day, type: TimeType, value: string) => {
     setHours((prev) => ({
       ...prev,
       [day]: {
@@ -50,7 +65,7 @@ export function BusinessHours({ business, setBusiness }) {
   };
 
   return (
-    <div className=" rounded-lg p-4 bg-white">
+    <div className="rounded-lg p-4 bg-white">
       <h3 className="text-lg font-semibold text-[#2C3E50] mb-4 text-center">Business Hours</h3>
 
       <div className="space-y-2">
