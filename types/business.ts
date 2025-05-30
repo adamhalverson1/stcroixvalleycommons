@@ -3,6 +3,7 @@ export interface Business {
     name: string;
     description: string;
     categories: string;
+    category: string;
     address: string;
     image: string;
     attachments?: string[] | Attachment[];
