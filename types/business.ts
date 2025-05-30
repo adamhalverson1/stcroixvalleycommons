@@ -34,6 +34,11 @@ export interface Business {
   attachments?: string[] | Attachment[];
 }
 
+export interface Attachment {
+  url: string;
+  type?: string;
+}
+
 export interface Events {
     id: string;
     title: string;
