@@ -46,13 +46,14 @@ export default function BusinessDetailPage() {
   useEffect(() => {
     const fetchBusinessEventAndCoupons = async () => {
       try {
-        const docRef = doc(db, 'businesses', slug);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
+        const businessQuery = query(collection(db, 'businesses'), where('slug', '==', slug));
+        const businessSnap = await getDocs(businessQuery);
+        if (!businessSnap.empty) {
+          const doc = businessSnap.docs[0];
+          const data = doc.data();
           setBusiness({
             ...data,
-            id: docSnap.id,
+            id: doc.id,
             image: data.image || data.imageUrl || '',
           } as Business);
         } else {

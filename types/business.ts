@@ -5,6 +5,6 @@ export interface Business {
     categories: string;
     address: string;
     image: string;
-    attachments?: string[];
+    attachments?: string[] | Attachment[];
   }
   
