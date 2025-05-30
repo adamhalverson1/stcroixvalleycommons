@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 
 if (!getApps().length) {
   initializeApp({

@@ -7,6 +7,8 @@ import { db } from '@/lib/firebase';
 import { Business } from '@/types/business';
 import CouponCard from '@/components/coupons/CouponCard';
 
+export const runtime = 'edge';
+
 interface Event {
   id: string;
   title: string;
