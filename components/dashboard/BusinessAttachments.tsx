@@ -4,28 +4,30 @@ import React, { useRef, useState } from 'react';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
-import { Business } from '@/types/business';
+import { Business, Attachment } from '@/types/business';
 
-interface Attachment {
-  name: string;
-  url: string;
-}
-
-  interface BusinessAttachmentsProps {
+interface BusinessAttachmentsProps {
   business: Business;
   setBusiness: React.Dispatch<React.SetStateAction<Business>>;
 }
 
-export function BusinessAttachments({ business, setBusiness }: BusinessAttachmentsProps)  {
+export function BusinessAttachments({ business, setBusiness }: BusinessAttachmentsProps) {
   const [uploading, setUploading] = useState(false);
   const [renamingIndex, setRenamingIndex] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Normalize attachments into Attachment[]
-  const attachments = (business.attachments || []).map(a =>
-    typeof a === 'string' ? { name: decodeURIComponent(a.split('/').pop()!.split('?')[0]), url: a } : a
+  // Normalize attachments into Attachment[] with guaranteed string 'name'
+  const attachments: Attachment[] = (business.attachments || []).map(a =>
+    typeof a === 'string'
+      ? { name: decodeURIComponent(a.split('/').pop()!.split('?')[0]), url: a }
+      : {
+          name: a.name ?? '', // fallback empty string if optional name missing
+          url: a.url,
+          type: a.type,
+        }
   );
+
   const maxReached = attachments.length >= 5;
 
   if (business.plan !== 'featured') return null;
@@ -66,7 +68,7 @@ export function BusinessAttachments({ business, setBusiness }: BusinessAttachmen
     const current = attachments[index];
     if (!renameValue.trim() || !current) return;
 
-    const updated = { ...current, name: renameValue.trim() };
+    const updated: Attachment = { ...current, name: renameValue.trim() };
     const businessRef = doc(db, 'businesses', business.id);
 
     try {
@@ -117,7 +119,10 @@ export function BusinessAttachments({ business, setBusiness }: BusinessAttachmen
                   Save
                 </button>
                 <button
-                  onClick={() => { setRenamingIndex(null); setRenameValue(''); }}
+                  onClick={() => {
+                    setRenamingIndex(null);
+                    setRenameValue('');
+                  }}
                   className="text-red-500 hover:underline text-sm ml-1"
                 >
                   Cancel
@@ -125,7 +130,10 @@ export function BusinessAttachments({ business, setBusiness }: BusinessAttachmen
               </>
             ) : (
               <button
-                onClick={() => { setRenamingIndex(i); setRenameValue(att.name); }}
+                onClick={() => {
+                  setRenamingIndex(i);
+                  setRenameValue(att.name ?? ''); // <-- FIX: provide fallback empty string here
+                }}
                 className="text-gray-500 hover:underline text-sm"
               >
                 Rename
