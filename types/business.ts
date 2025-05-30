@@ -4,7 +4,7 @@ export interface Business {
     description: string;
     categories: string;
     address: string;
-
     image: string;
+    attachments?: string[];
   }
   
