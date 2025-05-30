@@ -24,6 +24,7 @@ const emptyBusiness: Business = {
   phone: '',
   email: '',
   address: '',
+  city: '',
   state: '',
   serviceArea: '',
   website: '',
@@ -32,6 +33,12 @@ const emptyBusiness: Business = {
   Instagram: '',
   plan: 'basic',
   categories: [],
+  category: [],
+  image: '',
+  imageUrl: '',
+  attachments: [], // assuming this is part of the type
+  hours: {},
+  slug: '',       // assuming business hours are stored in an object
 };
 
 function isValidPlan(plan: any): plan is 'basic' | 'featured' {
@@ -55,7 +62,7 @@ export default function DashboardPage() {
           const querySnapshot = await getDocs(q);
           if (!querySnapshot.empty) {
             const docSnap = querySnapshot.docs[0];
-            setBusiness({ id: docSnap.id, ...(docSnap.data() as Business) });
+            setBusiness({ ...(docSnap.data() as Business), id: docSnap.id });
           } else {
             setBusiness(emptyBusiness);
           }

@@ -11,10 +11,16 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { Business } from '@/types/business';
 
-export function SubscriptionManager() {
+interface SubscriptionManagerProps {
+  business: Business;
+  setBusiness: React.Dispatch<React.SetStateAction<Business>>;
+}
+
+export function SubscriptionManager({ business, setBusiness }: SubscriptionManagerProps) {
   const [userId, setUserId] = useState<string | null>(null);
-  const [business, setBusiness] = useState<any>(null);
+  //const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [formState, setFormState] = useState({
     plan: '',

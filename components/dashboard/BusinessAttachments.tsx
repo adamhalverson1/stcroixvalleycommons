@@ -4,25 +4,19 @@ import React, { useRef, useState } from 'react';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
+import { Business } from '@/types/business';
 
 interface Attachment {
   name: string;
   url: string;
 }
 
-interface Business {
-  id: string;
-  plan?: string;
-  attachments?: (string | Attachment)[];
-  [key: string]: any;
-}
-
-interface BusinessAttachmentsProps {
+  interface BusinessAttachmentsProps {
   business: Business;
   setBusiness: React.Dispatch<React.SetStateAction<Business>>;
 }
 
-export function BusinessAttachments({ business, setBusiness }: BusinessAttachmentsProps) {
+export function BusinessAttachments({ business, setBusiness }: BusinessAttachmentsProps)  {
   const [uploading, setUploading] = useState(false);
   const [renamingIndex, setRenamingIndex] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState('');
