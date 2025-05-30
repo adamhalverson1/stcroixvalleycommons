@@ -13,8 +13,8 @@ export interface Business {
   plan:string;
   name: string;
   description: string;
-  categories: string;
-  category: string;
+  categories: string[];
+  category: string[];
   address: string;
   image: string;
   city: string;
@@ -25,7 +25,24 @@ export interface Business {
   Facebook: string;
   Instagram: string;
   Twitter: string;
+  slug: string;
   hours: BusinessHours; // 👈 changed from string to object
   website: string;
   attachments?: string[] | Attachment[];
+}
+
+export interface Events {
+    id: string;
+    title: string;
+    description: string;
+    date: string;
+    time: string;
+    location: string;
+    imageUrl?: string | undefined;
+    isFeatured: boolean;
+    slug: string;
+}
+
+export interface Coupons {
+
 }

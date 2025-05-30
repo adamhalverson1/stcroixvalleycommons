@@ -1,121 +1,205 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useState } from 'react';
+import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { BusinessForm } from '@/components/dashboard/BusinessForm';
-import { BusinessImage } from '@/components/dashboard/BusinessImage';
-import { BusinessHours } from '@/components/dashboard/BusinessHours';
-import { SubscriptionManager } from '@/components/dashboard/SubscriptionManager';
-import { BusinessAttachments } from '@/components/dashboard/BusinessAttachments';
-import PostEventForm from '@/components/events/PostEventForm';
-import EventList from '@/components/events/EventList';
-import PostCouponForm from '@/components/coupons/PostCouponForm';
-import CouponList from '@/components/coupons/CouponList';
 
-const TABS = ['Business Info', 'Events', 'Coupons', 'Subscription'];
+interface Business {
+  id: string;
+  name: string;
+  description: string;
+  phone: string;
+  address: string;
+  state: string;
+  website: string;
+  Facebook: string;
+  Twitter: string;
+  Instagram: string;
+  email: string;
+  serviceArea: string;
+  plan?: string; // "basic" or "featured"
+  categories?: string[];
+  [key: string]: any;
+}
 
-export default function DashboardPage() {
-  const [loading, setLoading] = useState(true);
-  const [business, setBusiness] = useState(null);
-  const [activeTab, setActiveTab] = useState('Business Info');
+interface BusinessFormProps {
+  business: Business;
+  setBusiness: (business: Business) => void;
+}
 
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          const q = query(
-            collection(db, 'businesses'),
-            where('userId', '==', user.uid)
-          );
-          const querySnapshot = await getDocs(q);
-          if (!querySnapshot.empty) {
-            const docSnap = querySnapshot.docs[0];
-            setBusiness({ id: docSnap.id, ...docSnap.data() });
-          } else {
-            setBusiness(null);
-          }
-        } catch (err) {
-          console.error('Error fetching business:', err);
-          setBusiness(null);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        setBusiness(null);
-        setLoading(false);
+export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
+  const [formData, setFormData] = useState({
+    name: business.name || '',
+    description: business.description || '',
+    phone: business.phone || '',
+    email: business.email || '',
+    address: business.address || '',
+    state: business.state || '',
+    serviceArea: business.serviceArea || '',
+    website: business.website || '',
+    Facebook: business.Facebook || '',
+    Twitter: business.Twitter || '',
+    Instagram: business.Instagram || '',
+  });
+
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(business.categories || []);
+  const [saving, setSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const categoryOptions = [
+    'Retail & Consumer Goods',
+    'Food & Beverage',
+    'Health & Wellness',
+    'Home Services',
+    'Professional Services',
+    'Arts, Entertainment & Recreation',
+    'Automotive',
+    'Education & Training',
+    'Technology & IT',
+    'Finance & Insurance',
+    'Logistics & Transportation',
+    'Pets & Animals',
+    'Other',
+  ];
+
+  const maxCategories = business.plan === 'featured' ? 3 : 1;
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setErrorMessage('');
+    try {
+      const businessRef = doc(db, 'businesses', business.id);
+      const updateData: any = {
+        ...formData,
+        categories: selectedCategories,
+      };
+
+      await updateDoc(businessRef, updateData);
+      setBusiness({ ...business, ...formData, categories: selectedCategories });
+      setSuccessMessage('Business information updated successfully.');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      console.error('Error updating business:', err);
+      setErrorMessage('Failed to update business info. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCategoryChange = (category: string, checked: boolean) => {
+    if (checked) {
+      if (selectedCategories.length < maxCategories) {
+        setSelectedCategories([...selectedCategories, category]);
       }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  if (loading) return <p className="text-center py-10">Loading...</p>;
-  if (!business) return <p className="text-center py-10 text-red-600">No Business Found</p>;
+    } else {
+      setSelectedCategories(selectedCategories.filter((c) => c !== category));
+    }
+  };
 
   return (
-    <div className="bg-gray-50 min-h-screen px-4 sm:px-6 py-10">
-      <h1 className="text-3xl font-bold text-center text-[#4C7C59] mb-8">Business Dashboard</h1>
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl max-w-lg mx-auto">
+      <h2 className="text-2xl font-semibold mb-4 text-[#4C7C59]">Business Info</h2>
 
-      {/* Tab Navigation */}
-      <div className="flex justify-center mb-6">
-        <div className="inline-flex rounded-lg border border-gray-300 bg-white shadow-sm overflow-hidden">
-          {TABS.map((tab) => (
-            <button
-              key={tab}
-              className={`px-4 py-2 text-sm font-medium ${
-                activeTab === tab
-                  ? 'bg-[#4C7C59] text-white'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab}
-            </button>
-          ))}
+      <div className="space-y-4">
+        {[
+          { label: 'Business Name', name: 'name' },
+          { label: 'Description', name: 'description', type: 'textarea' },
+          { label: 'Phone Number', name: 'phone' },
+          { label: 'Email', name: 'email' },
+          { label: 'Address', name: 'address' },
+          // State changed to select below
+          { label: 'Service Area', name: 'serviceArea' },
+          { label: 'Website', name: 'website' },
+          { label: 'Facebook', name: 'Facebook' },
+          { label: 'Twitter', name: 'Twitter' },
+          { label: 'Instagram', name: 'Instagram' },
+        ].map(({ label, name, type }) => (
+          <div key={name}>
+            <label className="block text-sm font-medium text-gray-700">{label}</label>
+            {type === 'textarea' ? (
+              <textarea
+                name={name}
+                value={(formData as any)[name]}
+                onChange={handleChange}
+                rows={3}
+                className="w-full text-black mt-1 p-2 border border-gray-300 rounded-lg"
+              />
+            ) : (
+              <input
+                type="text"
+                name={name}
+                value={(formData as any)[name]}
+                onChange={handleChange}
+                className="w-full text-black mt-1 p-2 border border-gray-300 rounded-lg"
+              />
+            )}
+          </div>
+        ))}
+
+        {/* State select */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">State</label>
+          <select
+            name="state"
+            value={formData.state}
+            onChange={handleChange}
+            className="w-full text-black mt-1 p-2 border border-gray-300 rounded-lg"
+            required
+          >
+            <option value="">Select State</option>
+            <option value="Minnesota">Minnesota</option>
+            <option value="Wisconsin">Wisconsin</option>
+          </select>
         </div>
+
+        {/* Category Selector */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Business Categories ({selectedCategories.length}/{maxCategories})
+          </label>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            {categoryOptions.map((category) => (
+              <label key={category} className="flex items-center space-x-2 text-sm text-gray-800">
+                <input
+                  type="checkbox"
+                  value={category}
+                  checked={selectedCategories.includes(category)}
+                  onChange={(e) =>
+                    handleCategoryChange(category, e.target.checked)
+                  }
+                  disabled={
+                    !selectedCategories.includes(category) &&
+                    selectedCategories.length >= maxCategories
+                  }
+                />
+                <span>{category}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="bg-[#4C7C59] text-white px-4 py-2 rounded-lg hover:bg-[#3b624a] transition disabled:opacity-60"
+        >
+          {saving ? 'Saving...' : 'Save Changes'}
+        </button>
+
+        {successMessage && (
+          <p className="text-green-600 text-sm mt-2">{successMessage}</p>
+        )}
+
+        {errorMessage && (
+          <p className="text-red-600 text-sm mt-2">{errorMessage}</p>
+        )}
       </div>
-
-      {/* Tab Content */}
-      <div className="bg-white shadow-sm rounded-xl p-4 sm:p-6 border border-gray-200">
-        {activeTab === 'Business Info' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Column */}
-            <div className="space-y-6">
-              <BusinessForm business={business} setBusiness={setBusiness} />              
-            </div>
-
-            {/* Right Column */}
-            <div className="space-y-6">
-              <BusinessImage business={business} setBusiness={setBusiness} />
-              <BusinessAttachments business={business} setBusiness={setBusiness} />
-              <BusinessHours business={business} setBusiness={setBusiness} />
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'Events' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <PostEventForm businessId={business.id} plan={business.plan} />
-            <EventList businessId={business.id} />
-          </div>
-        )}
-
-        {activeTab === 'Coupons' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <PostCouponForm businessId={business.id} plan={business.plan} />
-            <CouponList businessId={business.id} />
-          </div>
-        )}
-
-        {activeTab === 'Subscription' && (
-          <div className="space-y-6">
-            <SubscriptionManager business={business} setBusiness={setBusiness} />
-          </div>
-        )}
-      </div>
-    </div>
+    </form>
   );
 }
