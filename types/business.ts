@@ -29,6 +29,8 @@ export interface Business {
   slug: string;
   hours: BusinessHours; // 👈 changed from string to object
   website: string;
+  subscriptionId: string;
+  subscriptionStatus: string;
   attachments?: string[] | Attachment[];
 }
 
