@@ -6,6 +6,10 @@ export interface Business {
     category: string;
     address: string;
     image: string;
+    city: string;
+    state: string;
+    phone: string;
+    serviceArea: string;
     attachments?: string[] | Attachment[];
   }
   
