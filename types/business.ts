@@ -17,6 +17,7 @@ export interface Business {
   category: string[];
   address: string;
   image: string;
+  imageUrl: string;
   city: string;
   state: string;
   phone: string;
@@ -41,8 +42,10 @@ export interface Events {
     imageUrl?: string | undefined;
     isFeatured: boolean;
     slug: string;
+    plan: "basic" | "featured"
 }
 
 export interface Coupons {
+  plan: "basic" | "featured"
 
 }

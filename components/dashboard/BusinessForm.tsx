@@ -3,28 +3,11 @@
 import { useState } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-
-interface Business {
-  id: string;
-  name: string;
-  description: string;
-  phone: string;
-  address: string;
-  state: string;
-  website: string;
-  Facebook: string;
-  Twitter: string;
-  Instagram: string;
-  email: string;
-  serviceArea: string;
-  plan?: string; // "basic" or "featured"
-  categories?: string[];
-  [key: string]: any;
-}
+import type { Business } from '@/types/business';
 
 interface BusinessFormProps {
   business: Business;
-  setBusiness: (business: Business) => void;
+  setBusiness: React.Dispatch<React.SetStateAction<Business>>;
 }
 
 export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
@@ -45,7 +28,6 @@ export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(business.categories || []);
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
 
   const categoryOptions = [
     'Retail & Consumer Goods',
@@ -65,14 +47,13 @@ export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
 
   const maxCategories = business.plan === 'featured' ? 3 : 1;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setErrorMessage('');
     try {
       const businessRef = doc(db, 'businesses', business.id);
       const updateData: any = {
@@ -86,7 +67,6 @@ export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       console.error('Error updating business:', err);
-      setErrorMessage('Failed to update business info. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -103,7 +83,7 @@ export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl max-w-lg mx-auto">
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl">
       <h2 className="text-2xl font-semibold mb-4 text-[#4C7C59]">Business Info</h2>
 
       <div className="space-y-4">
@@ -113,7 +93,7 @@ export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
           { label: 'Phone Number', name: 'phone' },
           { label: 'Email', name: 'email' },
           { label: 'Address', name: 'address' },
-          // State changed to select below
+          { label: 'State', name: 'state' },
           { label: 'Service Area', name: 'serviceArea' },
           { label: 'Website', name: 'website' },
           { label: 'Facebook', name: 'Facebook' },
@@ -142,23 +122,6 @@ export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
           </div>
         ))}
 
-        {/* State select */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">State</label>
-          <select
-            name="state"
-            value={formData.state}
-            onChange={handleChange}
-            className="w-full text-black mt-1 p-2 border border-gray-300 rounded-lg"
-            required
-          >
-            <option value="">Select State</option>
-            <option value="Minnesota">Minnesota</option>
-            <option value="Wisconsin">Wisconsin</option>
-          </select>
-        </div>
-
-        {/* Category Selector */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Business Categories ({selectedCategories.length}/{maxCategories})
@@ -187,17 +150,13 @@ export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
         <button
           type="submit"
           disabled={saving}
-          className="bg-[#4C7C59] text-white px-4 py-2 rounded-lg hover:bg-[#3b624a] transition disabled:opacity-60"
+          className="bg-[#4C7C59] text-white px-4 py-2 rounded-lg hover:bg-[#3b624a] transition"
         >
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
 
         {successMessage && (
-          <p className="text-green-600 text-sm mt-2">{successMessage}</p>
-        )}
-
-        {errorMessage && (
-          <p className="text-red-600 text-sm mt-2">{errorMessage}</p>
+          <p className="text-green-600 mt-2">{successMessage}</p>
         )}
       </div>
     </form>

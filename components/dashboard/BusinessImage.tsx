@@ -3,17 +3,13 @@
 import { useRef, useState } from 'react';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db, storage } from '@/lib/firebase'; // adjust based on your structure
+import { db, storage } from '@/lib/firebase';
 
-interface Business {
-  id: string;
-  imageUrl?: string;
-  [key: string]: any;
-}
+import type { Business } from '@/types/business';
 
 interface BusinessImageProps {
   business: Business;
-  setBusiness: (business: Business) => void;
+  setBusiness: React.Dispatch<React.SetStateAction<Business>>;
 }
 
 export function BusinessImage({ business, setBusiness }: BusinessImageProps) {
@@ -30,13 +26,17 @@ export function BusinessImage({ business, setBusiness }: BusinessImageProps) {
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
 
+      // Update Firestore
       const businessRef = doc(db, 'businesses', business.id);
       await updateDoc(businessRef, { imageUrl: url });
-      setBusiness({ ...business, imageUrl: url });
+
+      // Update local state
+      setBusiness(prev => ({ ...prev, imageUrl: url }));
     } catch (err) {
       console.error('Image upload failed:', err);
     } finally {
       setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
