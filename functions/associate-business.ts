@@ -1,7 +1,3 @@
-// app/api/associate-business/route.ts
-
-export const runtime = 'nodejs';
-
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';

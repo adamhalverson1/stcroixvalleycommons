@@ -1,11 +1,8 @@
-// app/api/webhook/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { db } from '@/lib/firebase-admin'; // <- Node-only import
 import { Timestamp } from 'firebase-admin/firestore';
-
-export const runtime = 'nodejs';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-03-31.basil',
