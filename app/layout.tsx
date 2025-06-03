@@ -2,7 +2,6 @@ import './globals.css';
 import { ReactNode } from 'react';
 import Navbar from '@/components/navBar';
 import Footer from '@/components/footer';
-import { ClerkProvider } from "@clerk/nextjs";
 
 export const metadata = {
   title: 'St Croix Valley Commons',
@@ -17,11 +16,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </head>
-    <ClerkProvider>
-      <Navbar />
-      <body className="bg-white">{children}</body>
-      <Footer />
-    </ClerkProvider>
+      <body className="bg-white">
+        <Navbar /> {/* ✅ Now it's valid */}
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }

@@ -1,4 +1,3 @@
-// app/api/create-portal-session/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
