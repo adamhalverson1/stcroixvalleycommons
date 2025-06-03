@@ -2,12 +2,23 @@
 import { getApps, initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
+// Validate env vars before using
+const projectId = process.env.FIREBASE_PROJECT_ID;
+const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY;
+
+if (!projectId || !clientEmail || !privateKeyRaw) {
+  throw new Error('Missing Firebase service account environment variables');
+}
+
+const privateKey = privateKeyRaw.replace(/\\n/g, '\n');
+
 if (!getApps().length) {
   initializeApp({
     credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID!,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+      projectId,
+      clientEmail,
+      privateKey,
     }),
   });
 }
