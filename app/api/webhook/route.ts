@@ -36,41 +36,107 @@ export async function POST(req: NextRequest) {
     return new NextResponse('Webhook signature verification failed', { status: 400 });
   }
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session;
-    const businessId = session.metadata?.businessId;
-    const priceId = session.metadata?.priceId;
-    const plan = session.metadata?.plan ?? 'Basic';
+  try {
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const businessId = session.metadata?.businessId;
+        const priceId = session.metadata?.priceId;
+        const plan = session.metadata?.plan ?? 'Basic';
 
-    if (!businessId) {
-      console.warn('⚠️ Missing businessId in session metadata');
-      return new NextResponse('Missing businessId', { status: 400 });
-    }
+        if (!businessId) {
+          console.warn('⚠️ Missing businessId in session metadata');
+          return new NextResponse('Missing businessId', { status: 400 });
+        }
 
-    try {
-      const subscriptionId = session.subscription as string;
-      const customerId = session.customer as string;
+        // We cannot reliably get subscription info here yet,
+        // so update just the plan and priceId for now
+        await db.collection('businesses').doc(businessId).set(
+          {
+            plan,
+            priceId,
+          },
+          { merge: true }
+        );
 
+        console.log(`✅ checkout.session.completed processed for business ${businessId}.`);
+        break;
+      }
+
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const subscriptionId = subscription.id;
+        const subscriptionStatus = subscription.status;
+        const customerId = subscription.customer as string;
+        const metadata = subscription.metadata || {};
+
+        const businessId = metadata.businessId;
+
+        if (!businessId) {
+          console.warn('⚠️ Missing businessId in subscription metadata');
+          break;
+        }
+
+        await db.collection('businesses').doc(businessId).set(
+          {
+            subscriptionId,
+            subscriptionStatus,
+            customerId,
+            subscribedAt: Timestamp.now(),
+            plan: metadata.plan ?? undefined,
+            priceId: metadata.priceId ?? undefined,
+          },
+          { merge: true }
+        );
+
+        console.log(`✅ Subscription event processed for business ${businessId}.`);
+        break;
+      }
+
+    case 'invoice.payment_succeeded': {
+      const invoice = event.data.object as any;
+      const subscriptionId = invoice['subscription'] as string | undefined;
+
+      if (!subscriptionId) {
+        console.warn('⚠️ Invoice missing subscription ID');
+        break;
+      }
+
+      // Retrieve the subscription to get metadata and status
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-      const subscriptionStatus = subscription.status ?? 'active';
+      const subscriptionStatus = subscription.status;
+      const customerId = subscription.customer as string;
+      const metadata = subscription.metadata || {};
+      const businessId = metadata.businessId;
+
+      if (!businessId) {
+        console.warn('⚠️ Missing businessId in subscription metadata on invoice payment succeeded');
+        break;
+      }
 
       await db.collection('businesses').doc(businessId).set(
         {
-          plan,
-          priceId,
-          customerId,
           subscriptionId,
           subscriptionStatus,
+          customerId,
           subscribedAt: Timestamp.now(),
+          plan: metadata.plan ?? undefined,
+          priceId: metadata.priceId ?? undefined,
         },
         { merge: true }
       );
 
-      console.log(`✅ Webhook processed successfully for business ${businessId}.`);
-    } catch (err) {
-      console.error('🔥 Error updating Firestore with subscription info:', err);
-      return new NextResponse('Error updating business document', { status: 500 });
+      console.log(`✅ Invoice payment succeeded processed for business ${businessId}.`);
+      break;
     }
+
+      default:
+        console.log(`ℹ️ Unhandled event type ${event.type}`);
+    }
+  } catch (err) {
+    console.error('🔥 Error processing webhook event:', err);
+    return new NextResponse('Webhook handler error', { status: 500 });
   }
 
   return new NextResponse('Webhook received', { status: 200 });
