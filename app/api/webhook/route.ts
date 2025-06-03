@@ -1,7 +1,6 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { db } from '@/lib/firebase-admin'; // <- Node-only import
+import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 
 export const runtime = 'nodejs';
@@ -41,38 +40,36 @@ export async function POST(req: NextRequest) {
     const session = event.data.object as Stripe.Checkout.Session;
     const businessId = session.metadata?.businessId;
     const priceId = session.metadata?.priceId;
-    const plan = session.metadata?.plan ?? 'basic';
+    const plan = session.metadata?.plan ?? 'Basic';
 
     if (!businessId) {
+      console.warn('⚠️ Missing businessId in session metadata');
       return new NextResponse('Missing businessId', { status: 400 });
     }
 
     try {
       const subscriptionId = session.subscription as string;
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const customerId = session.customer as string;
 
-      const currentPeriodEnd = (subscription as any)['current_period_end'];
-      const currentPeriodEndTimestamp = currentPeriodEnd
-        ? Timestamp.fromDate(new Date(currentPeriodEnd * 1000))
-        : null;
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const subscriptionStatus = subscription.status ?? 'active';
 
       await db.collection('businesses').doc(businessId).set(
         {
-          subscriptionStatus: 'active',
-          subscribedAt: Timestamp.now(),
-          subscriptionId,
-          customerId: session.customer as string,
-          priceId,
           plan,
-          ...(currentPeriodEndTimestamp && { currentPeriodEnd: currentPeriodEndTimestamp }),
+          priceId,
+          customerId,
+          subscriptionId,
+          subscriptionStatus,
+          subscribedAt: Timestamp.now(),
         },
         { merge: true }
       );
 
-      console.log(`✅ Firestore updated for business ${businessId}`);
+      console.log(`✅ Webhook processed successfully for business ${businessId}.`);
     } catch (err) {
-      console.error('🔥 Firestore update failed:', err);
-      return new NextResponse('Firestore update failed', { status: 500 });
+      console.error('🔥 Error updating Firestore with subscription info:', err);
+      return new NextResponse('Error updating business document', { status: 500 });
     }
   }
 
