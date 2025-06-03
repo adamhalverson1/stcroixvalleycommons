@@ -84,7 +84,7 @@ export default function DashboardPage() {
   }, []);
 
   if (loading) return <p className="text-center py-10">Loading...</p>;
-  if (!business.id) return <p className="text-center py-10 text-red-600">No Business Found</p>;
+  if (!business.id) return <p className="bg-gray-50 min-h-screen px-4 sm:px-6 text-center py-10 text-red-600">No Business Found. Please Contact support@willowriverdigital.com for assistance.</p>;
 
   return (
     <div className="bg-gray-50 min-h-screen px-4 sm:px-6 py-10">
