@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 
+export const runtime = 'nodejs';
+
 export async function POST(req: NextRequest) {
   const { name, category, email, userId } = await req.json();
 
