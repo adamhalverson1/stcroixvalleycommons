@@ -17,9 +17,10 @@ type Coupon = {
 
 type Props = {
   businessId: string;
+  refreshFlag: number;
 };
 
-export default function CouponList({ businessId }: Props) {
+export default function CouponList({ businessId, refreshFlag }: Props) {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
 
@@ -38,7 +39,7 @@ export default function CouponList({ businessId }: Props) {
 
   useEffect(() => {
     fetchCoupons();
-  }, [businessId]);
+  }, [businessId, refreshFlag]);
 
   return (
     <div className="mt-8 space-y-4">

@@ -10,11 +10,11 @@ import type { Business } from '@/types/business';
 interface BusinessImageProps {
   business: Business;
   setBusiness: React.Dispatch<React.SetStateAction<Business>>;
+  refreshBusiness: () => Promise<void>;
 }
 
 
-
-export function BusinessImage({ business, setBusiness }: BusinessImageProps) {
+export function BusinessImage({ business, setBusiness, refreshBusiness }: BusinessImageProps) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -31,6 +31,7 @@ export function BusinessImage({ business, setBusiness }: BusinessImageProps) {
       // Update Firestore
       const businessRef = doc(db, 'businesses', business.id);
       await updateDoc(businessRef, { imageUrl: url });
+      await refreshBusiness(); 
 
       // Update local state
       setBusiness(prev => ({ ...prev, imageUrl: url }));

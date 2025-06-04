@@ -7,9 +7,10 @@ import EditEventModal from './EditEventModal';
 
 type Props = {
   businessId: string;
+  refreshFlag: number;
 };
 
-export default function EventList({ businessId }: Props) {
+export default function EventList({ businessId, refreshFlag }: Props) {
   const [events, setEvents] = useState<any[]>([]);
   const [editingEvent, setEditingEvent] = useState<any | null>(null);
 
@@ -28,7 +29,7 @@ export default function EventList({ businessId }: Props) {
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [refreshFlag]);
 
   return (
     <div className="mt-8 space-y-4">

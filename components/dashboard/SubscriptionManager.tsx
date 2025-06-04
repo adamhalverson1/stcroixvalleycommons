@@ -16,11 +16,13 @@ import { Business } from '@/types/business';
 interface SubscriptionManagerProps {
   business: Business;
   setBusiness: React.Dispatch<React.SetStateAction<Business>>;
+  refreshBusiness: () => Promise<void>;
 }
 
 export function SubscriptionManager({
   business,
   setBusiness,
+  refreshBusiness,
 }: SubscriptionManagerProps) {
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,7 +79,7 @@ export function SubscriptionManager({
   ) => {
     const { name, value } = e.target;
     setFormState((prev) => ({ ...prev, [name]: value }));
-  };
+  }
 
   const handleChangePlan = async () => {
     if (!business.id || !business.subscriptionId) return;
@@ -102,6 +104,7 @@ export function SubscriptionManager({
         await updateDoc(businessRef, { plan: formState.plan });
         setBusiness((prev) => ({ ...prev, plan: formState.plan }));
         alert('Plan updated successfully!');
+        await refreshBusiness();
       } else {
         alert('Failed to update plan.');
       }

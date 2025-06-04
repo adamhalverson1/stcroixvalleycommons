@@ -28,9 +28,10 @@ type HoursMap = Record<Day, BusinessHour>;
 interface BusinessHoursProps {
   business: Business;
   setBusiness: React.Dispatch<React.SetStateAction<Business>>;
+  refreshBusiness: () => Promise<void>;
 }
 
-export function BusinessHours({ business, setBusiness }: BusinessHoursProps) {
+export function BusinessHours({ business, setBusiness, refreshBusiness }: BusinessHoursProps) {
   const [hours, setHours] = useState<HoursMap>(() => {
     const initial: Partial<HoursMap> = {};
     daysOfWeek.forEach((day) => {
@@ -59,7 +60,8 @@ export function BusinessHours({ business, setBusiness }: BusinessHoursProps) {
     await updateDoc(doc(db, 'businesses', business.id), {
       hours,
     });
-
+    await refreshBusiness();
+    
     setBusiness((prev) => ({ ...prev, hours }));
     alert('Business hours updated');
   };

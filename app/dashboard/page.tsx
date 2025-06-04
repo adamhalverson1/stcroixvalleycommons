@@ -52,6 +52,33 @@ export default function DashboardPage() {
   const [business, setBusiness] = useState<Business>(emptyBusiness);
   const [activeTab, setActiveTab] = useState('Business Info');
 
+  // ✅ Move this outside of refreshBusiness!
+  const [couponRefreshFlag, setCouponRefreshFlag] = useState(0);
+  const triggerCouponRefresh = () => {
+    setCouponRefreshFlag((prev) => prev + 1);
+  };
+
+ const [eventRefreshFlag, setEventRefreshFlag] = useState(0);
+  const triggerEventRefresh = () => {
+    setEventRefreshFlag((prev) => prev + 1);
+  };
+
+
+  const refreshBusiness = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (user) {
+      const q = query(collection(db, 'businesses'), where('userId', '==', user.uid));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        const docSnap = querySnapshot.docs[0];
+        setBusiness({ ...(docSnap.data() as Business), id: docSnap.id });
+      }
+    }
+  };
+
+
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -114,33 +141,49 @@ export default function DashboardPage() {
         {activeTab === 'Business Info' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-6">
-              <BusinessForm business={business} setBusiness={setBusiness} />
+              <BusinessForm business={business} setBusiness={setBusiness} refreshBusiness={refreshBusiness}/>
             </div>
             <div className="space-y-6">
-              <BusinessImage business={business} setBusiness={setBusiness} />
-              <BusinessAttachments business={business} setBusiness={setBusiness} />
-              <BusinessHours business={business} setBusiness={setBusiness} />
+              <BusinessImage business={business} setBusiness={setBusiness} refreshBusiness={refreshBusiness}/>
+              <BusinessAttachments business={business} setBusiness={setBusiness} refreshBusiness={refreshBusiness}/>
+              <BusinessHours business={business} setBusiness={setBusiness} refreshBusiness={refreshBusiness}/>
             </div>
           </div>
         )}
 
         {activeTab === 'Events' && isValidPlan(business.plan) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <PostEventForm businessId={business.id} plan={business.plan} />
-            <EventList businessId={business.id} />
+            <PostEventForm 
+              businessId={business.id} 
+              plan={business.plan} 
+              refreshBusiness={refreshBusiness}
+              onEventPosted={triggerEventRefresh} 
+              />
+            <EventList 
+              businessId={business.id}
+              refreshFlag={eventRefreshFlag}
+              />
           </div>
         )}
 
         {activeTab === 'Coupons' && isValidPlan(business.plan) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <PostCouponForm businessId={business.id} plan={business.plan} />
-            <CouponList businessId={business.id} />
+            <PostCouponForm
+              businessId={business.id}
+              plan={business.plan}
+              refreshBusiness={refreshBusiness}
+              onCouponPosted={triggerCouponRefresh}
+            />
+            <CouponList
+              businessId={business.id}
+              refreshFlag={couponRefreshFlag}
+            />
           </div>
         )}
 
         {activeTab === 'Subscription' && (
           <div className="space-y-6">
-            <SubscriptionManager business={business} setBusiness={setBusiness} />
+            <SubscriptionManager business={business} setBusiness={setBusiness} refreshBusiness={refreshBusiness} />
           </div>
         )}
       </div>

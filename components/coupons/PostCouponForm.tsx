@@ -45,9 +45,11 @@ async function generateUniqueSlug(title: string): Promise<string> {
 type Props = {
   businessId: string;
   plan: 'basic' | 'featured';
+  refreshBusiness: () => Promise<void>;
+  onCouponPosted: () => void;
 };
 
-export default function PostCouponForm({ businessId, plan }: Props) {
+export default function PostCouponForm({ businessId, plan, refreshBusiness, onCouponPosted }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [code, setCode] = useState('');
@@ -127,6 +129,9 @@ export default function PostCouponForm({ businessId, plan }: Props) {
         isFeatured: plan === 'featured',
         createdAt: Timestamp.now(),
       });
+
+      await refreshBusiness();
+      onCouponPosted();
 
       setSuccess(true);
       setTitle('');

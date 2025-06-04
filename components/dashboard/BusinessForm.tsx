@@ -8,9 +8,10 @@ import type { Business } from '@/types/business';
 interface BusinessFormProps {
   business: Business;
   setBusiness: React.Dispatch<React.SetStateAction<Business>>;
+  refreshBusiness: () => Promise<void>;
 }
 
-export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
+export function BusinessForm({ business, setBusiness, refreshBusiness }: BusinessFormProps) {
   const [formData, setFormData] = useState({
     name: business.name || '',
     description: business.description || '',
@@ -65,6 +66,7 @@ export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
       };
 
       await updateDoc(businessRef, updateData);
+      await refreshBusiness();
       setBusiness({ ...business, ...formData, categories: selectedCategories });
       setSuccessMessage('Business information updated successfully.');
       setTimeout(() => setSuccessMessage(''), 3000);

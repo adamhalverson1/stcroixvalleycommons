@@ -9,9 +9,10 @@ import { Business, Attachment } from '@/types/business';
 interface BusinessAttachmentsProps {
   business: Business;
   setBusiness: React.Dispatch<React.SetStateAction<Business>>;
+  refreshBusiness: () => Promise<void>;
 }
 
-export function BusinessAttachments({ business, setBusiness }: BusinessAttachmentsProps) {
+export function BusinessAttachments({ business, setBusiness, refreshBusiness }: BusinessAttachmentsProps) {
   const [uploading, setUploading] = useState(false);
   const [renamingIndex, setRenamingIndex] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -51,6 +52,7 @@ export function BusinessAttachments({ business, setBusiness }: BusinessAttachmen
       await updateDoc(businessRef, {
         attachments: arrayUnion(newAttachment),
       });
+      await refreshBusiness();
 
       setBusiness(prev => ({
         ...prev,
