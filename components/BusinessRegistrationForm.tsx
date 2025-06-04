@@ -19,7 +19,7 @@ export default function RegisterBusinessPage() {
     Twitter: '',
     Instagram: '',
     serviceArea: '',
-    categories: '',
+    categories: [] as string[],
     description: '',
     hours: daysOfWeek.reduce((acc, day) => {
       acc[day] = { open: '', close: '' };
@@ -109,6 +109,7 @@ export default function RegisterBusinessPage() {
       >
         <option value="">Select Category</option>
         <option value="Retail & Consumer Goods">Retail & Consumer Goods</option>
+        <option value="Real Estate">Real Estate</option>
         <option value="Food & Beverage">Food & Beverage</option>
         <option value="Professional Services">Professional Services</option>
         <option value="Health & Wellness">Health & Wellness</option>
@@ -120,6 +121,7 @@ export default function RegisterBusinessPage() {
         <option value="Arts, Entertainment & Recreation">Arts, Entertainment & Recreation</option>
         <option value="Logistics & Transportation">Logistics & Transportation</option>
         <option value="Pets & Animals">Pets & Animals</option>
+        <option value="Other">Other</option>
       </select>
 
       <textarea

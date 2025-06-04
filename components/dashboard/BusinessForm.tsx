@@ -25,12 +25,15 @@ export function BusinessForm({ business, setBusiness }: BusinessFormProps) {
     Instagram: business.Instagram || '',
   });
 
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(business.categories || []);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+  Array.isArray(business.categories) ? business.categories : [business.categories].filter(Boolean)
+  );
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
   const categoryOptions = [
     'Retail & Consumer Goods',
+    'Real Estate',
     'Food & Beverage',
     'Health & Wellness',
     'Home Services',
