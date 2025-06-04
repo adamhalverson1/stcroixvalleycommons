@@ -12,6 +12,8 @@ interface BusinessImageProps {
   setBusiness: React.Dispatch<React.SetStateAction<Business>>;
 }
 
+
+
 export function BusinessImage({ business, setBusiness }: BusinessImageProps) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -22,7 +24,7 @@ export function BusinessImage({ business, setBusiness }: BusinessImageProps) {
 
     setUploading(true);
     try {
-      const storageRef = ref(storage, `businessImages/${business.id}`);
+      const storageRef = ref(storage, `businesses/${business.id}`);
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
 
