@@ -2,12 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
 export async function POST(req: NextRequest) {
-  // Initialize Stripe inside the handler, at runtime
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-03-31.basil',
   });
 
   const { businessId, priceId, plan } = await req.json();
+
+  if (!businessId || !priceId || !plan) {
+    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+
+  console.log('Creating checkout session with:', { businessId, priceId, plan });
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -21,11 +26,6 @@ export async function POST(req: NextRequest) {
           priceId,
           plan,
         },
-      },
-      metadata: {
-        businessId,
-        priceId,
-        plan,
       },
     });
 

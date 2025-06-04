@@ -6,7 +6,6 @@ import { db } from '@/lib/firebase';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
-export const runtime = 'edge'; 
 
 interface Event {
   id: string;
