@@ -67,29 +67,43 @@ export function BusinessAttachments({ business, setBusiness, refreshBusiness }: 
   };
 
   const handleRename = async (index: number) => {
-    const current = attachments[index];
-    if (!renameValue.trim() || !current) return;
+  const current = attachments[index];
+  if (!renameValue.trim() || !current) return;
 
-    const updated: Attachment = { ...current, name: renameValue.trim() };
-    const businessRef = doc(db, 'businesses', business.id);
-
-    try {
-      // Remove old, add new
-      await updateDoc(businessRef, { attachments: arrayRemove(current) });
-      await updateDoc(businessRef, { attachments: arrayUnion(updated) });
-
-      setBusiness(prev => {
-        const updatedList = [...attachments];
-        updatedList[index] = updated;
-        return { ...prev, attachments: updatedList };
-      });
-
-      setRenamingIndex(null);
-      setRenameValue('');
-    } catch (err) {
-      console.error('Rename failed:', err);
-    }
+  // Ensure all fields are explicitly defined (no undefineds)
+  const cleanedCurrent: Attachment = {
+    name: current.name ?? '',
+    url: current.url,
+    ...(current.type ? { type: current.type } : {}), // include type only if it exists
   };
+
+  const updated: Attachment = {
+    ...cleanedCurrent,
+    name: renameValue.trim(),
+  };
+
+  const businessRef = doc(db, 'businesses', business.id);
+
+  try {
+    await updateDoc(businessRef, {
+      attachments: arrayRemove(cleanedCurrent),
+    });
+    await updateDoc(businessRef, {
+      attachments: arrayUnion(updated),
+    });
+
+    setBusiness(prev => {
+      const updatedList = [...attachments];
+      updatedList[index] = updated;
+      return { ...prev, attachments: updatedList };
+    });
+
+    setRenamingIndex(null);
+    setRenameValue('');
+  } catch (err) {
+    console.error('Rename failed:', err);
+  }
+};
 
   return (
     <div className="bg-white p-6 rounded-xl mt-6">
@@ -98,22 +112,22 @@ export function BusinessAttachments({ business, setBusiness, refreshBusiness }: 
       <ul className="mb-4 space-y-4">
         {attachments.map((att, i) => (
           <li key={i} className="flex items-center gap-2">
-            <a
-              href={att.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline break-all"
-            >
-              {renamingIndex === i ? (
-                <input
-                  className="border border-gray-300 px-2 py-1 rounded text-sm"
-                  value={renameValue}
-                  onChange={e => setRenameValue(e.target.value)}
-                />
-              ) : (
-                <span>{att.name}</span>
-              )}
-            </a>
+            {renamingIndex === i ? (
+              <input
+                className="border border-gray-300 px-2 py-1 rounded text-sm text-black"
+                value={renameValue}
+                onChange={e => setRenameValue(e.target.value)}
+              />
+            ) : (
+              <a
+                href={att.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline break-all"
+              >
+                {att.name}
+              </a>
+            )}
 
             {renamingIndex === i ? (
               <>
@@ -134,7 +148,7 @@ export function BusinessAttachments({ business, setBusiness, refreshBusiness }: 
               <button
                 onClick={() => {
                   setRenamingIndex(i);
-                  setRenameValue(att.name ?? ''); // <-- FIX: provide fallback empty string here
+                  setRenameValue(att.name ?? '');
                 }}
                 className="text-gray-500 hover:underline text-sm"
               >

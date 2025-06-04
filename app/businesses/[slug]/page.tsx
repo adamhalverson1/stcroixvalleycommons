@@ -35,6 +35,19 @@ interface Attachment {
   name?: string;
 }
 
+function formatTime12Hour(time: string): string {
+  const [hour, minute] = time.split(':');
+  const date = new Date();
+  date.setHours(Number(hour));
+  date.setMinutes(Number(minute));
+
+  return date.toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
 export default function BusinessDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
@@ -255,7 +268,9 @@ export default function BusinessDetailPage() {
                     <li key={day} className="flex justify-between py-2">
                       <span className="font-medium">{day}</span>
                       <span>
-                        {time?.open && time?.close ? `${time.open} - ${time.close}` : 'Closed'}
+                        {time?.open && time?.close
+                          ? `${formatTime12Hour(time.open)} - ${formatTime12Hour(time.close)}`
+                          : 'Closed'}
                       </span>
                     </li>
                   );
@@ -339,10 +354,16 @@ export default function BusinessDetailPage() {
 }
 
 function Detail({ label, value }: { label: string; value: React.ReactNode }) {
+  const isBlockElement = typeof value !== 'string' && typeof value !== 'number';
+
   return (
     <div>
       <p className="text-gray-500 font-medium">{label}</p>
-      <p className="mt-1">{value}</p>
+      {isBlockElement ? (
+        <div className="mt-1">{value}</div>
+      ) : (
+        <p className="mt-1">{value}</p>
+      )}
     </div>
   );
 }
