@@ -36,21 +36,44 @@ export async function POST(req: NextRequest) {
     return new NextResponse('Webhook signature verification failed', { status: 400 });
   }
 
-  console.log('📩 Stripe Webhook Event:', event.type);
+
 
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        // Do NOT update Firestore here — metadata is unreliable in this event
+
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log(`✅ Checkout completed for session ${session.id}, businessId: ${session.metadata?.businessId}`);
+        const businessId = session.metadata?.businessId;
+        const priceId = session.metadata?.priceId;
+        const plan = session.metadata?.plan ?? 'Basic';
+
+        if (!businessId) {
+          console.warn('⚠️ Missing businessId in session metadata');
+          return new NextResponse('Missing businessId', { status: 400 });
+        }
+
+        // We cannot reliably get subscription info here yet,
+        // so update just the plan and priceId for now
+        await db.collection('businesses').doc(businessId).set(
+          {
+            plan,
+            priceId,
+          },
+          { merge: true }
+        );
+
+        console.log(`✅ checkout.session.completed processed for business ${businessId}.`);
         break;
       }
 
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
+        const subscriptionId = subscription.id;
+        const subscriptionStatus = subscription.status;
+        const customerId = subscription.customer as string;
         const metadata = subscription.metadata || {};
+
         const businessId = metadata.businessId;
 
         if (!businessId) {
@@ -60,12 +83,12 @@ export async function POST(req: NextRequest) {
 
         await db.collection('businesses').doc(businessId).set(
           {
-            subscriptionId: subscription.id,
-            subscriptionStatus: subscription.status,
-            customerId: subscription.customer as string,
+            subscriptionId,
+            subscriptionStatus,
+            customerId,
             subscribedAt: Timestamp.now(),
-            ...(metadata.plan && { plan: metadata.plan }),
-            ...(metadata.priceId && { priceId: metadata.priceId }),
+            plan: metadata.plan ?? undefined,
+            priceId: metadata.priceId ?? undefined,
           },
           { merge: true }
         );
@@ -74,39 +97,56 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as Stripe.Invoice & { subscription?: string };
+    case 'invoice.payment_succeeded': {
+      const invoice = event.data.object as any;
+      const subscriptionId = invoice['subscription'] as string | undefined;
 
-        const subscriptionId = invoice.subscription;
-          if (!subscriptionId) {
-            console.warn('⚠️ Invoice missing subscription ID');
-            break;
-          }
-
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        const metadata = subscription.metadata || {};
-        const businessId = metadata.businessId;
-
-        if (!businessId) {
-          console.warn('⚠️ Missing businessId in subscription metadata (invoice.payment_succeeded)');
-          break;
-        }
-
-        await db.collection('businesses').doc(businessId).set(
-          {
-            subscriptionId,
-            subscriptionStatus: subscription.status,
-            customerId: subscription.customer as string,
-            subscribedAt: Timestamp.now(),
-            ...(metadata.plan && { plan: metadata.plan }),
-            ...(metadata.priceId && { priceId: metadata.priceId }),
-          },
-          { merge: true }
-        );
-
-        console.log(`✅ Invoice payment succeeded processed for business ${businessId}.`);
+      if (!subscriptionId) {
+        console.warn('⚠️ Invoice missing subscription ID');
         break;
       }
+
+
+      // Retrieve the subscription to get metadata and status
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const subscriptionStatus = subscription.status;
+      const customerId = subscription.customer as string;
+      const metadata = subscription.metadata || {};
+      const businessId = metadata.businessId;
+
+
+
+      if (!businessId) {
+        console.warn('⚠️ Missing businessId in subscription metadata on invoice payment succeeded');
+
+
+
+
+
+
+
+
+
+
+
+        break;
+      }
+
+      await db.collection('businesses').doc(businessId).set(
+        {
+          subscriptionId,
+          subscriptionStatus,
+          customerId,
+          subscribedAt: Timestamp.now(),
+          plan: metadata.plan ?? undefined,
+          priceId: metadata.priceId ?? undefined,
+        },
+        { merge: true }
+      );
+
+      console.log(`✅ Invoice payment succeeded processed for business ${businessId}.`);
+      break;
+    }
 
       default:
         console.log(`ℹ️ Unhandled event type ${event.type}`);
