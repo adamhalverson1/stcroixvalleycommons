@@ -45,7 +45,6 @@ export default function Navbar() {
       {/* Navbar section */}
       <nav className="bg-[#2C3E50] shadow-md">
         <div className="flex justify-between items-center px-4 py-4 md:hidden">
-          <div className="text-white font-bold">Menu</div>
           <button onClick={() => setIsOpen(!isOpen)} className="text-white">
             {isOpen ? <FiX size={28} /> : <FiMenu size={28} />}
           </button>
@@ -63,7 +62,7 @@ export default function Navbar() {
             {!isAuthenticated ? (
               <>
                 <Link href="/login" className="block text-[#2C3E50] font-bold hover:text-[#7DA195]">Business Sign In</Link>
-                <Link href="/register-business" className="block text-[#2C3E50] font-bold hover:text-[#7DA195]">Business Sign Up</Link>
+                <Link href="/select-plan" className="block text-[#2C3E50] font-bold hover:text-[#7DA195]">Business Sign Up</Link>
               </>
             ) : (
               <>
@@ -105,7 +104,7 @@ export default function Navbar() {
                     Business Sign In
                   </Link>
                   <Link
-                    href="/register-business"
+                    href="/select-plan"
                     className="block px-4 py-2 text-sm text-[#2C3E50] hover:bg-[#f0f0f0]"
                     onClick={() => setDropdownOpen(false)}
                   >
