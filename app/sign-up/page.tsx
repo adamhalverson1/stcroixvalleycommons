@@ -8,23 +8,25 @@ import SignUpForm from '@/components/SignUpForm';
 export default function SignUpPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!firebaseUser) return;
+      if (!firebaseUser) {
+        setLoading(false);
+        return;
+      }
 
       setUser(firebaseUser);
 
       const planType = localStorage.getItem('selectedPlan');
+      const priceId = localStorage.getItem('selectedPriceId');
       const businessId = localStorage.getItem('businessId');
-      const priceId =
-        planType === 'featured'
-          ? 'price_1REuzvKabuDj6Ug30bfZ2sDL'
-          : 'price_1REuzXKabuDj6Ug3So8O4OSY';
 
-      if (!planType || !businessId) {
-        console.error('Missing planType or businessId in localStorage');
+      if (!planType || !priceId || !businessId) {
+        console.error('Missing planType, priceId, or businessId in localStorage');
+        setLoading(false);
         return;
       }
 
@@ -36,18 +38,29 @@ export default function SignUpPage() {
         });
 
         const data = await res.json();
+
         if (data?.url) {
           window.location.href = data.url;
         } else {
           console.error('Stripe session creation failed:', data);
+          setLoading(false);
         }
       } catch (err) {
         console.error('Error redirecting to Stripe:', err);
+        setLoading(false);
       }
     });
 
     return () => unsubscribe();
   }, [router]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-center py-10 min-h-screen bg-gray-100 p-6">

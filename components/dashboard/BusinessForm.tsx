@@ -18,6 +18,7 @@ export function BusinessForm({ business, setBusiness, refreshBusiness }: Busines
     phone: business.phone || '',
     email: business.email || '',
     address: business.address || '',
+    city: business.city || '',
     state: business.state || '',
     serviceArea: business.serviceArea || '',
     website: business.website || '',

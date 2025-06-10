@@ -1,12 +1,15 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { Sparkles, Star } from 'lucide-react';
 
 export default function SelectPlanPage() {
+  const router = useRouter();
+
   const handlePlanSelect = (priceId: string, plan: string) => {
     localStorage.setItem('selectedPriceId', priceId);
     localStorage.setItem('selectedPlan', plan);
-    window.location.href = '/sign-up';
+    router.push('/sign-up');
   };
 
   return (
