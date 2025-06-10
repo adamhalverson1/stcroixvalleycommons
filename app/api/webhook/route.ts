@@ -113,29 +113,34 @@ export async function POST(req: NextRequest) {
 
         break;
       }
-
       case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = invoice.subscription;
+        const invoice = event.data.object as Stripe.Invoice & {
+          subscription?: string | { id: string };
+        };
 
-        if (!subscriptionId || typeof subscriptionId !== 'string') {
+        const subscriptionId =
+          typeof invoice.subscription === 'string'
+            ? invoice.subscription
+            : invoice.subscription?.id;
+
+        if (!subscriptionId) {
           console.warn('⚠️ Invoice missing subscription ID');
           break;
         }
 
-        try {
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-          const subscriptionStatus = subscription.status;
-          const customerId = subscription.customer as string;
-          const metadata = subscription.metadata || {};
-          const businessId = metadata.businessId;
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const subscriptionStatus = subscription.status;
+        const customerId = subscription.customer as string;
+        const metadata = subscription.metadata || {};
+        const businessId = metadata.businessId;
 
-          if (!businessId) {
-            console.warn('⚠️ Missing businessId in subscription metadata on invoice.payment_succeeded');
-            break;
-          }
+        if (!businessId) {
+          console.warn('⚠️ Missing businessId in subscription metadata on invoice.payment_succeeded');
+          break;
+        }
 
-          await db.collection('businesses').doc(businessId).update({
+        await db.collection('businesses').doc(businessId).set(
+          {
             subscriptionId,
             subscriptionStatus,
             customerId,
@@ -143,13 +148,11 @@ export async function POST(req: NextRequest) {
             plan: metadata.plan ?? undefined,
             priceId: metadata.priceId ?? undefined,
             status: subscriptionStatus === 'active' ? 'active' : subscriptionStatus,
-          });
+          },
+          { merge: true }
+        );
 
-          console.log(`✅ Invoice payment processed: ${subscriptionStatus} for business ${businessId}`);
-        } catch (err) {
-          console.error('❌ Failed to update business on invoice.payment_succeeded:', err);
-        }
-
+        console.log(`✅ Invoice payment processed: ${subscriptionStatus} for business ${businessId}`);
         break;
       }
 
