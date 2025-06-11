@@ -3,75 +3,39 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function SuccessPage() {
+export default function SuccessClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [error, setError] = useState('');
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [verified, setVerified] = useState(false);
-
-  const sessionId = searchParams.get('session_id');
-
-  // Auto trigger subscription check and redirect
   useEffect(() => {
+    const sessionId = searchParams.get('session_id');
     if (!sessionId) {
-      setError('Missing session_id in URL');
+      console.error('Missing session_id in URL');
+      setError('Missing session ID');
       return;
     }
 
     const confirmPayment = async () => {
-      setLoading(true);
-      setError(null);
-
       try {
         const res = await fetch(`/api/check-subscription?session_id=${sessionId}`);
         const data = await res.json();
 
         if (!res.ok) {
-          setError(data?.error || 'Subscription check failed');
-          setLoading(false);
-          return;
+          console.error('❌ Subscription check failed:', data?.error || data);
+          setError('Failed to verify subscription.');
+        } else {
+          console.log('✅ Subscription verified:', data);
+          router.push('/dashboard');
         }
-
-        setVerified(true);
-        router.push('/dashboard');
       } catch (err) {
-        setError('Error confirming subscription');
-        setLoading(false);
+        console.error('❌ Error confirming subscription:', err);
+        setError('Something went wrong. Try again.');
       }
     };
 
     confirmPayment();
-  }, [router, sessionId]);
-
-  // Manual button click handler to retry verification and redirect
-  async function handleManualRedirect() {
-    if (!sessionId) {
-      setError('Missing session_id');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch(`/api/check-subscription?session_id=${sessionId}`);
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data?.error || 'Subscription check failed');
-        setLoading(false);
-        return;
-      }
-
-      setVerified(true);
-      router.push('/dashboard');
-    } catch {
-      setError('Error confirming subscription');
-      setLoading(false);
-    }
-  }
+  }, [searchParams, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -80,29 +44,21 @@ export default function SuccessPage() {
         <p className="text-gray-700">
           You've successfully registered your business with <strong>St. Croix Commons</strong>.
         </p>
-
-        {!loading && !verified && !error && (
+        {error ? (
+          <p className="text-red-600 text-sm">{error}</p>
+        ) : (
           <p className="text-gray-600 text-sm">Verifying your subscription and redirecting to dashboard...</p>
         )}
-
-        {loading && (
-          <div className="w-full h-1 bg-gray-200 rounded overflow-hidden">
-            <div className="h-full bg-green-500 animate-pulse transition-all duration-3000"></div>
-          </div>
-        )}
-
+        <div className="w-full h-1 bg-gray-200 rounded overflow-hidden">
+          <div className="h-full bg-green-500 animate-pulse transition-all duration-3000"></div>
+        </div>
         {error && (
-          <p className="text-red-600 text-sm">
-            {error}
-            <br />
-            <button
-              onClick={handleManualRedirect}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              disabled={loading}
-            >
-              Try Again / Go to Dashboard
-            </button>
-          </p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="mt-4 px-6 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition"
+          >
+            Go to Dashboard
+          </button>
         )}
       </div>
     </div>
