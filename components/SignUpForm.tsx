@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -15,6 +16,7 @@ function slugify(text: string): string {
 
 export default function SignUpForm() {
   const auth = getAuth();
+  const router = useRouter();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,17 +39,15 @@ export default function SignUpForm() {
       await setDoc(docRef, {
         name: businessName,
         userId: user.uid,
-        createdAt: serverTimestamp(),
-        plan: localStorage.getItem('selectedPlan') || null,
         slug,
+        createdAt: serverTimestamp(),
+        plan: null,
       });
 
-      // Save slug to localStorage for Stripe redirection
-      localStorage.setItem('businessId', slug);
-
-      // No redirect here — sign-up/page.tsx will handle it via onAuthStateChanged
+      // Redirect to dashboard after successful sign-up
+      router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'An error occurred during sign up.');
     } finally {
       setLoading(false);
     }
@@ -100,7 +100,7 @@ export default function SignUpForm() {
         disabled={loading}
         className="w-full bg-[#2C3E50] text-white font-semibold py-3 rounded-lg transition-colors hover:bg-[#1a2734]"
       >
-        {loading ? 'Creating Account...' : 'Create Account & Pay'}
+        {loading ? 'Creating Account...' : 'Create Account'}
       </button>
     </form>
   );

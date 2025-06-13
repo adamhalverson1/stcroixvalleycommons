@@ -78,7 +78,7 @@ export default function WhyAdvertisePage() {
       </div>
 
       <div className="mt-12 text-center">
-        <Link href="/register-business">
+        <Link href="/sign-up">
           <button className="bg-[#4C7C59] text-white px-6 py-3 rounded-md text-lg hover:bg-[#3b6447] transition">
             Get Started Today
           </button>
