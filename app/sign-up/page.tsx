@@ -31,7 +31,7 @@ export default function SignUpPage() {
       }
 
       try {
-        const res = await fetch('/api/checkout-session', {
+        const res = await fetch('/api/stripe/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ businessId, priceId, plan: planType }),
