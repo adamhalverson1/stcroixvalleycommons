@@ -1,7 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
+
+export const config = {
+  runtime: 'nodejs', // Ensure Vercel runs this with the Node.js runtime, not Edge
+};
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-03-31.basil',
@@ -20,17 +23,17 @@ async function buffer(readable: ReadableStream<Uint8Array>) {
   return Buffer.concat(chunks);
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
-  const sig = req.headers.get('stripe-signature')!;
+  const sig = request.headers.get('stripe-signature')!;
   let event: Stripe.Event;
 
   try {
-    const rawBody = await buffer(req.body!);
+    const rawBody = await buffer(request.body!);
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err) {
     console.error('❌ Webhook signature verification failed:', err);
-    return new NextResponse('Webhook signature verification failed', { status: 400 });
+    return new Response('Webhook signature verification failed', { status: 400 });
   }
 
   try {
@@ -173,8 +176,8 @@ export async function POST(req: NextRequest) {
     }
   } catch (err) {
     console.error('🔥 Unexpected error in webhook handler:', err);
-    return new NextResponse('Webhook handler failed', { status: 500 });
+    return new Response('Webhook handler failed', { status: 500 });
   }
 
-  return new NextResponse('Webhook processed', { status: 200 });
+  return new Response('Webhook processed', { status: 200 });
 }
