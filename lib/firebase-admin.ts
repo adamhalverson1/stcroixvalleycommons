@@ -23,10 +23,5 @@ if (!getApps().length) {
   });
 }
 
-console.log('🔥 Firebase Admin initialized with:', {
-  projectId,
-  clientEmail,
-  keySnippet: privateKey.slice(0, 10) + '...',
-});
 
 export const db = getFirestore();
