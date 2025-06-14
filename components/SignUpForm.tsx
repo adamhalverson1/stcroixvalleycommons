@@ -42,6 +42,7 @@ export default function SignUpForm() {
         slug,
         createdAt: serverTimestamp(),
         plan: null,
+        subscriptionStatus: "inactive"
       });
 
       // Redirect to dashboard after successful sign-up

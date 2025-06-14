@@ -3,8 +3,6 @@ import Stripe from 'stripe';
 import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 
-export const runtime = 'nodejs';
-
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-03-31.basil',
 });
@@ -39,44 +37,49 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
+        console.log('✅ Received checkout.session.completed event');
+
         const businessId = session.metadata?.businessId;
+        const plan = session.metadata?.plan ?? 'basic';
         const priceId = session.metadata?.priceId;
-        const plan = session.metadata?.plan ?? 'Basic';
 
         if (!businessId) {
-          console.warn('⚠️ Missing businessId in checkout.session.completed');
+          console.warn('⚠️ Missing businessId in session metadata');
           break;
         }
 
-        // Retrieve subscription ID from session (string or null)
         const subscriptionId = typeof session.subscription === 'string' ? session.subscription : null;
-
-        let subscriptionStatus = 'pending';
-        let customerId: string | null = null;
-
-        if (subscriptionId) {
-          try {
-            const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-            subscriptionStatus = subscription.status;
-            customerId = subscription.customer as string | null;
-          } catch (err) {
-            console.error('❌ Failed to retrieve subscription on checkout.session.completed:', err);
-          }
+        if (!subscriptionId) {
+          console.warn('⚠️ No subscription ID found in session');
+          break;
         }
 
         try {
-          await db.collection('businesses').doc(businessId).update({
-            plan,
-            priceId,
-            subscriptionId: subscriptionId ?? null,
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          const subscriptionStatus = subscription.status;
+          const customerId = subscription.customer as string;
+          const subscribedAt = new Date(subscription.start_date * 1000);
+
+          const businessRef = db.collection('businesses').doc(businessId);
+          const docSnapshot = await businessRef.get();
+
+          const updateData: any = {
+            subscriptionId,
             subscriptionStatus,
             customerId,
-            subscribedAt: subscriptionStatus === 'active' ? Timestamp.now() : null,
+            priceId,
+            plan,
             status: subscriptionStatus === 'active' ? 'active' : subscriptionStatus,
-          });
-          console.log(`✅ checkout.session.completed processed for business ${businessId}`);
+          };
+
+          if (!docSnapshot.exists || !docSnapshot.data()?.subscribedAt) {
+            updateData.subscribedAt = Timestamp.fromDate(subscribedAt);
+          }
+
+          await businessRef.update(updateData);
+          console.log(`✅ Firestore updated for business ${businessId}`);
         } catch (err) {
-          console.error('❌ Failed to update business after checkout.session.completed:', err);
+          console.error('❌ Failed to fetch subscription or update Firestore:', err);
         }
 
         break;
@@ -97,22 +100,26 @@ export async function POST(req: NextRequest) {
         }
 
         try {
-          await db.collection('businesses').doc(businessId).update({
-            subscriptionId,
-            subscriptionStatus,
-            customerId,
-            subscribedAt: Timestamp.now(),
-            plan: metadata.plan ?? undefined,
-            priceId: metadata.priceId ?? undefined,
-            status: subscriptionStatus === 'active' ? 'active' : subscriptionStatus,
-          });
-          console.log(`✅ Subscription status ${subscriptionStatus} updated for business ${businessId}`);
+          await db.collection('businesses').doc(businessId).set(
+            {
+              subscriptionId,
+              subscriptionStatus,
+              customerId,
+              subscribedAt: Timestamp.now(),
+              plan: metadata.plan ?? undefined,
+              priceId: metadata.priceId ?? undefined,
+              status: subscriptionStatus === 'active' ? 'active' : subscriptionStatus,
+            },
+            { merge: true }
+          );
+          console.log(`✅ Subscription ${event.type} updated for business ${businessId}`);
         } catch (err) {
-          console.error('❌ Failed to update subscription info:', err);
+          console.error('❌ Failed to update business from subscription event:', err);
         }
 
         break;
       }
+
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice & {
           subscription?: string | { id: string };
@@ -124,35 +131,40 @@ export async function POST(req: NextRequest) {
             : invoice.subscription?.id;
 
         if (!subscriptionId) {
-          console.warn('⚠️ Invoice missing subscription ID');
+          console.warn('⚠️ Missing subscription ID in invoice');
           break;
         }
 
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        const subscriptionStatus = subscription.status;
-        const customerId = subscription.customer as string;
-        const metadata = subscription.metadata || {};
-        const businessId = metadata.businessId;
+        try {
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          const subscriptionStatus = subscription.status;
+          const customerId = subscription.customer as string;
+          const metadata = subscription.metadata || {};
+          const businessId = metadata.businessId;
 
-        if (!businessId) {
-          console.warn('⚠️ Missing businessId in subscription metadata on invoice.payment_succeeded');
-          break;
+          if (!businessId) {
+            console.warn('⚠️ Missing businessId in subscription metadata during invoice.payment_succeeded');
+            break;
+          }
+
+          await db.collection('businesses').doc(businessId).set(
+            {
+              subscriptionId,
+              subscriptionStatus,
+              customerId,
+              subscribedAt: Timestamp.now(),
+              plan: metadata.plan ?? undefined,
+              priceId: metadata.priceId ?? undefined,
+              status: subscriptionStatus === 'active' ? 'active' : subscriptionStatus,
+            },
+            { merge: true }
+          );
+
+          console.log(`✅ Invoice payment succeeded for business ${businessId}`);
+        } catch (err) {
+          console.error('❌ Failed to handle invoice.payment_succeeded:', err);
         }
 
-        await db.collection('businesses').doc(businessId).set(
-          {
-            subscriptionId,
-            subscriptionStatus,
-            customerId,
-            subscribedAt: Timestamp.now(),
-            plan: metadata.plan ?? undefined,
-            priceId: metadata.priceId ?? undefined,
-            status: subscriptionStatus === 'active' ? 'active' : subscriptionStatus,
-          },
-          { merge: true }
-        );
-
-        console.log(`✅ Invoice payment processed: ${subscriptionStatus} for business ${businessId}`);
         break;
       }
 
@@ -160,7 +172,7 @@ export async function POST(req: NextRequest) {
         console.log(`ℹ️ Unhandled event type: ${event.type}`);
     }
   } catch (err) {
-    console.error('🔥 Error handling webhook event:', err);
+    console.error('🔥 Unexpected error in webhook handler:', err);
     return new NextResponse('Webhook handler failed', { status: 500 });
   }
 

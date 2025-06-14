@@ -62,7 +62,7 @@ export default function Navbar() {
             {!isAuthenticated ? (
               <>
                 <Link href="/login" className="block text-[#2C3E50] font-bold hover:text-[#7DA195]">Business Sign In</Link>
-                <Link href="/select-plan" className="block text-[#2C3E50] font-bold hover:text-[#7DA195]">Business Sign Up</Link>
+                <Link href="/sign-up" className="block text-[#2C3E50] font-bold hover:text-[#7DA195]">Business Sign Up</Link>
               </>
             ) : (
               <>
@@ -104,7 +104,7 @@ export default function Navbar() {
                     Business Sign In
                   </Link>
                   <Link
-                    href="/select-plan"
+                    href="/sign-up"
                     className="block px-4 py-2 text-sm text-[#2C3E50] hover:bg-[#f0f0f0]"
                     onClick={() => setDropdownOpen(false)}
                   >

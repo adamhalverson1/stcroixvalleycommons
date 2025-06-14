@@ -180,7 +180,6 @@ export default function DashboardPage() {
             />
           </div>
         )}
-
         {activeTab === 'Subscription' && (
           <div className="space-y-6">
             <SubscriptionManager business={business} setBusiness={setBusiness} refreshBusiness={refreshBusiness} />

@@ -12,6 +12,10 @@ import {
 } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { Business } from '@/types/business';
+import { Sparkles, Star } from 'lucide-react';
+import FeaturedPlan from '../plans/featured';
+import { BasicEvaluatedExpression } from 'next/dist/compiled/webpack/webpack';
+import BasicPlan from '../plans/basic';
 
 interface SubscriptionManagerProps {
   business: Business;
@@ -30,7 +34,6 @@ export function SubscriptionManager({
   const [updatingPlan, setUpdatingPlan] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
-  // Track auth user
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -44,7 +47,6 @@ export function SubscriptionManager({
     return () => unsubscribe();
   }, []);
 
-  // Fetch business once we have userId
   useEffect(() => {
     const fetchBusiness = async () => {
       if (!userId) return;
@@ -79,7 +81,7 @@ export function SubscriptionManager({
   ) => {
     const { name, value } = e.target;
     setFormState((prev) => ({ ...prev, [name]: value }));
-  }
+  };
 
   const handleChangePlan = async () => {
     if (!business.id || !business.subscriptionId) return;
@@ -152,6 +154,29 @@ export function SubscriptionManager({
     }
   };
 
+  const handleStartSubscription = async () => {
+    if (!business.id || !formState.plan) return;
+    try {
+      const res = await fetch('/api/checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId: business.id,
+          plan: formState.plan,
+        }),
+      });
+
+      const data = await res.json();
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        alert('Failed to start checkout session.');
+      }
+    } catch (error) {
+      console.error('Error starting checkout session:', error);
+    }
+  };
+
   if (loading) {
     return (
       <p className="text-center py-10 text-gray-500">
@@ -160,57 +185,61 @@ export function SubscriptionManager({
     );
   }
 
+  const isInactive =
+    business?.subscriptionStatus !== 'active' || !business.subscriptionId;
+
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-[#4C7C59] text-center mb-6">
-        Manage Subscription
-      </h1>
-      <div className="bg-white border-2 rounded-xl p-6 max-w-xl mx-auto">
-        {business ? (
-          <>
-            <p className="text-gray-600 mb-2">
-              You are currently subscribed to{' '}
-              <strong>{business.plan || 'N/A'}</strong>.
-            </p>
-            <p className="text-gray-600 mb-4">
-              Subscription status:{' '}
-              <strong>{business.subscriptionStatus || 'N/A'}</strong>
-            </p>
+    <div className="space-y-10">
+      <div className="grid gap-8 sm:grid-cols-2 w-full">
+        <BasicPlan/>
+        <FeaturedPlan/>
 
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Select Plan
-            </label>
-            <select
-              name="plan"
-              value={formState.plan}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-[#4C7C59]"
-            >
-              <option value="basic">Basic</option>
-              <option value="featured">Featured</option>
-            </select>
+      </div>
 
-            <div className="flex justify-between gap-4 mt-6">
-              <button
-                onClick={handleChangePlan}
-                disabled={updatingPlan}
-                className="bg-[#4C7C59] text-white px-4 py-2 rounded-md hover:bg-[#3b644a] disabled:opacity-50"
-              >
-                {updatingPlan ? 'Updating...' : 'Update Plan'}
-              </button>
-              <button
-                onClick={handleCancelSubscription}
-                disabled={cancelling}
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50"
-              >
-                {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
-              </button>
-            </div>
-          </>
+      <div className="max-w-xl mx-auto bg-white border p-6 rounded-xl">
+        <h2 className="text-xl font-bold text-center mb-4 text-[#4C7C59]">
+          {isInactive ? 'Subscribe to a Plan' : 'Manage Subscription'}
+        </h2>
+
+        <label className="block mb-2 text-sm font-medium text-gray-700">
+          Select Plan
+        </label>
+        <select
+          name="plan"
+          value={formState.plan}
+          onChange={handleChange}
+          className="w-full border border-gray-300 rounded-md px-3 py-2 mb-4 text-black"
+        >
+          <option value="">Choose a plan</option>
+          <option value="basic">Basic - $10/month</option>
+          <option value="featured">Featured - $25/month</option>
+        </select>
+
+        {isInactive ? (
+          <button
+            onClick={handleStartSubscription}
+            disabled={!formState.plan}
+            className="w-full bg-[#4C7C59] text-white py-2 px-4 rounded-md hover:bg-[#3b6447]"
+          >
+            Subscribe Now
+          </button>
         ) : (
-          <p className="text-center text-gray-500">
-            No subscription found for this account.
-          </p>
+          <div className="flex gap-4">
+            <button
+              onClick={handleChangePlan}
+              disabled={updatingPlan}
+              className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              {updatingPlan ? 'Updating...' : 'Update Plan'}
+            </button>
+            <button
+              onClick={handleCancelSubscription}
+              disabled={cancelling}
+              className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 disabled:opacity-50"
+            >
+              {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
+            </button>
+          </div>
         )}
       </div>
     </div>
